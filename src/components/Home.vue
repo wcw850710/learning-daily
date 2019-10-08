@@ -64,6 +64,7 @@ export default {
         return {
             lists: {},
             totalUrl: [],
+            times: [0, 1, 3, 6, 14, 29, 89],
             isShowDescription: false,
         }
     },
@@ -79,7 +80,7 @@ export default {
             return formatDate
         },
         fetchLists() {
-            this.$db.ref(`/frank/lists`).once('value', snapshot => {
+            this.$db.ref(`/${this.username}/lists`).once('value', snapshot => {
                 const data = snapshot.val()
                 const totalUrl = new Set()
                 let lists = {}
@@ -94,26 +95,32 @@ export default {
                 this.totalUrl = [...totalUrl]
             })
         },
+        timesLoopFunc(func) {
+            const day = 86400000
+            for (let i = 0, length = this.times.length; i < length; i++) {
+                let time = this.times[i]
+                const formatDate = this.formatDate(
+                    new Date(new Date().getTime() + day * time),
+                )
+                func(formatDate)
+            }
+        },
         setData() {
             chrome.tabs.query(
                 { active: true, lastFocusedWindow: true },
                 tabs => {
                     const lists = { ...this.lists }
                     const url = tabs[0].url
-                    const day = 86400000
-                    const times = [0, 1, 3, 6, 14, 29, 89]
-                    for (let i = 0; i < times.length; i++) {
-                        let time = times[i]
-                        const formatDate = this.formatDate(
-                            new Date(new Date().getTime() + day * time),
-                        )
-                        if (!lists[formatDate]) {
-                            lists[formatDate] = []
-                        }
-                        lists[formatDate].push({ url, isChecked: false })
-                        this.$db
-                            .ref(`/frank/lists/${formatDate}`)
-                            .push({ url, isChecked: false })
+                    if (url) {
+                        this.timesLoopFunc(formatDate => {
+                            if (!lists[formatDate]) {
+                                lists[formatDate] = []
+                            }
+                            lists[formatDate].push({ url, isChecked: false })
+                            this.$db
+                                .ref(`/${this.username}/lists/${formatDate}`)
+                                .push({ url, isChecked: false })
+                        })
                     }
                 },
             )
@@ -122,32 +129,10 @@ export default {
             chrome.tabs.query(
                 { active: true, lastFocusedWindow: true },
                 tabs => {
-                    const today = this.today
-                    const lists = [...this.lists[today]]
                     const url = tabs[0].url
-                    this.$db
-                        .ref(`frank`)
-                        .orderByChild('url')
-                        .equalTo(url)
-                        .once('value', snapshot => {
-                            console.log(snapshot.val())
-                        })
-                    // const filterList = lists.filter(list => list.url === url)
-                    // if (filterList.length) {
-                    //     const spliceLists = [...lists]
-                    //     let minusNum = 0
-                    //     lists.forEach((list, index) => {
-                    //         filterList.every(filterList => {
-                    //             if (filterList.url === list.url) {
-                    //                 minusNum++
-                    //                 spliceLists.splice(index - minusNum, 1)
-                    //                 return false
-                    //             }
-                    //             return true
-                    //         })
-                    //     })
-                    //     this.$set(this.lists, today, spliceLists)
-                    // }
+                    if (url) {
+                        console.log(this.lists)
+                    }
                 },
             )
         },
@@ -177,6 +162,9 @@ export default {
                 }
             }
             return lists
+        },
+        username() {
+            return window.localStorage.getItem('username')
         },
     },
     created() {
