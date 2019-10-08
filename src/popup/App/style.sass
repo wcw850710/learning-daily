@@ -1,0 +1,132 @@
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video
+    margin: 0
+    padding: 0
+    border: 0
+    font-size: 100%
+    vertical-align: baseline
+    font-family: 微軟正黑體
+
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section
+    display: block
+
+body
+    line-height: 1
+
+ol, ul
+    list-style: none
+
+blockquote, q
+    quotes: none
+
+blockquote
+    &:before, &:after
+        content: ''
+        content: none
+
+q
+    &:before, &:after
+        content: ''
+        content: none
+
+table
+    border-collapse: collapse
+    border-spacing: 0
+
+*
+    box-sizing: border-box
+
+$blue: #1b69f9
+$red: #e83939
+$gray: #7d7d7d
+
+.main_app
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    flex-wrap: wrap
+    min-width: 240px
+    font-size: 14px
+
+.title
+    background: #000
+    color: #fff
+    width: 100%
+    text-align: center
+    padding: 10px
+
+.content
+    flex: 1
+    padding: 12px 10px
+    font-size: 13px
+    display: flex
+    align-items: center
+    justify-content: space-between
+    width: 100%
+    &__date
+        padding: 0 6px 0 0
+        margin-right: 6px
+        border-right: 1px solid #000
+    &__lists
+        display: flex
+        align-items: center
+        justify-content: flex-start
+        flex-wrap: wrap
+        flex: 1
+        &__list
+            margin: 2px
+            cursor: pointer
+            color: $blue
+            font-weight: 900
+            text-decoration: underline
+            &--checked
+                color: $gray
+                text-decoration: none
+
+.description
+    color: $gray
+    font-size: 12px
+    line-height: 1.3
+    width: 100%
+    background: #eaeaea
+    &__title
+        color: #000
+        cursor: pointer
+        padding: 5px 10px
+        width: 100%
+        text-align: center
+        border-bottom: 1px solid #000
+        &__icon
+            margin-left: 8px
+            &--active
+                transform: rotate(180deg)
+    &__text
+        padding: 5px 9px
+        b
+            color: $red
+            margin: 0 2px
+
+.footer
+    width: 100%
+    padding: 6px
+    display: flex
+    justify-content: space-between
+    align-items: center
+    &__btn
+        &-pen, &-increase, &-delete
+            appearance: none
+            background: none
+            padding: 0
+            border: 0
+            outline: none
+            cursor: pointer
+            &:hover
+                opacity: 0.6
+        &-pen
+            color: $red
+            margin-right: auto
+        &-increase
+            color: $blue
+            margin-right: 7px
+        &-delete
+            color: $gray
