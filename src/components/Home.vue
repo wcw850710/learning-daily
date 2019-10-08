@@ -62,8 +62,9 @@ export default {
     name: 'HelloWorld',
     data() {
         return {
-            lists: {},
-            totalUrl: [],
+            // lists: [],
+            todayLists: [],
+            // totalUrl: [],
             times: [0, 1, 3, 6, 14, 29, 89],
             isShowDescription: false,
         }
@@ -79,20 +80,33 @@ export default {
             const formatDate = `${year}-${month}-${date}`
             return formatDate
         },
-        fetchLists() {
-            this.$db.ref(`/${this.username}/lists`).once('value', snapshot => {
-                const data = snapshot.val()
-                const totalUrl = new Set()
-                let lists = {}
-                for (let time in data) {
-                    lists[time] = []
-                    for (let key in data[time]) {
-                        lists[time].push(data[time][key])
-                        totalUrl.add(data[time][key].url)
-                    }
-                }
-                this.lists = lists
-                this.totalUrl = [...totalUrl]
+        // fetchAllLists() {
+        //     this.$db.ref(this.refLists).once('value', snapshot => {
+        //         const data = snapshot.val()
+        //         this.lists = data || []
+        //     })
+        // },
+        fetchTodayLists() {
+            chrome.tabs.query(
+                { active: true, lastFocusedWindow: true },
+                tabs => {
+                    this.todayLists = []
+                    this.$db
+                        .ref(this.refLists)
+                        .orderByChild('date')
+                        .equalTo(this.today)
+                        .once('value', snapshot => {
+                            const data = snapshot.val()
+                            for (let key in data) {
+                                this.todayLists.push(data[key])
+                            }
+                        })
+                },
+            )
+        },
+        pipeFetch(...fncs) {
+            fncs.forEach(fnc => {
+                fnc()
             })
         },
         timesLoopFunc(func) {
@@ -109,17 +123,15 @@ export default {
             chrome.tabs.query(
                 { active: true, lastFocusedWindow: true },
                 tabs => {
-                    const lists = { ...this.lists }
                     const url = tabs[0].url
                     if (url) {
                         this.timesLoopFunc(formatDate => {
-                            if (!lists[formatDate]) {
-                                lists[formatDate] = []
+                            const pushData = {
+                                url,
+                                date: formatDate,
+                                isChecked: false,
                             }
-                            lists[formatDate].push({ url, isChecked: false })
-                            this.$db
-                                .ref(`/${this.username}/lists/${formatDate}`)
-                                .push({ url, isChecked: false })
+                            this.$db.ref(this.refLists).push(pushData)
                         })
                     }
                 },
@@ -131,7 +143,6 @@ export default {
                 tabs => {
                     const url = tabs[0].url
                     if (url) {
-                        console.log(this.lists)
                     }
                 },
             )
@@ -153,22 +164,15 @@ export default {
         today() {
             return this.formatDate(new Date())
         },
-        todayLists() {
-            let lists = []
-            for (let time in this.lists) {
-                if (this.today === time) {
-                    lists = this.lists[time]
-                    break
-                }
-            }
-            return lists
-        },
         username() {
             return window.localStorage.getItem('username')
         },
+        refLists() {
+            return `/${this.username}/lists`
+        },
     },
     created() {
-        this.fetchLists()
+        this.pipeFetch(/*this.fetchAllLists,*/ this.fetchTodayLists)
     },
 }
 </script>
