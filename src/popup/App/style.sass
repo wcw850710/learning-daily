@@ -40,12 +40,44 @@ $red: #e83939
 $gray: #7d7d7d
 
 .main_app
+    min-width: 240px
+
+.login
+    width: 100%
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    padding: 15px
+    &__alert
+        color: $red
+        background: #ffe4e4
+        border: 1px solid #ecc4c4
+        font-size: 13px
+        width: 100%
+        margin-bottom: 10px
+        border-radius: 5px
+        padding: 6px
+    &__input
+        width: 100%
+        margin: 0 0 10px
+        padding: 4px
+    &__submit
+        appearance: none
+        margin-left: auto
+        background: $blue
+        color: #fff
+        border: 0
+        padding: 6px 15px
+        cursor: pointer
+
+.main
     display: flex
     flex-direction: column
     align-items: center
     justify-content: center
     flex-wrap: wrap
-    min-width: 240px
+    width: 100%
     font-size: 14px
 
 .title
