@@ -41,6 +41,10 @@
                 @click="draw"
             ><i class="fas fa-pencil-alt"></i></button>
             <button
+                class="footer__btn-eye"
+                @click="draw"
+            ><i class="fas fa-eye"></i></button>
+            <button
                 class="footer__btn-increase"
                 @click="setData"
             ><i class="fas fa-plus"></i></button>
@@ -60,6 +64,7 @@ export default {
     data() {
         return {
             lists: {},
+            totalUrl: [],
             isShowDescription: false,
         }
     },
@@ -77,14 +82,17 @@ export default {
         fetchLists() {
             this.$db.ref(`/frank`).once('value', snapshot => {
                 const data = snapshot.val()
+                const totalUrl = new Set()
                 let lists = {}
                 for (let time in data) {
                     lists[time] = []
                     for (let key in data[time]) {
                         lists[time].push(data[time][key])
+                        totalUrl.add(data[time][key].url)
                     }
                 }
                 this.lists = lists
+                this.totalUrl = [...totalUrl]
             })
         },
         setData() {
@@ -118,22 +126,29 @@ export default {
                     const today = this.today
                     const lists = [...this.lists[today]]
                     const url = tabs[0].url
-                    const filterList = lists.filter(list => list.url === url)
-                    if (filterList.length) {
-                        const spliceLists = [...lists]
-                        let minusNum = 0
-                        lists.forEach((list, index) => {
-                            filterList.every(filterList => {
-                                if (filterList.url === list.url) {
-                                    minusNum++
-                                    spliceLists.splice(index - minusNum, 1)
-                                    return false
-                                }
-                                return true
-                            })
+                    this.$db
+                        .ref(`frank`)
+                        .orderByChild('url')
+                        .equalTo(url)
+                        .once('value', snapshot => {
+                            console.log(snapshot.val())
                         })
-                        this.$set(this.lists, today, spliceLists)
-                    }
+                    // const filterList = lists.filter(list => list.url === url)
+                    // if (filterList.length) {
+                    //     const spliceLists = [...lists]
+                    //     let minusNum = 0
+                    //     lists.forEach((list, index) => {
+                    //         filterList.every(filterList => {
+                    //             if (filterList.url === list.url) {
+                    //                 minusNum++
+                    //                 spliceLists.splice(index - minusNum, 1)
+                    //                 return false
+                    //             }
+                    //             return true
+                    //         })
+                    //     })
+                    //     this.$set(this.lists, today, spliceLists)
+                    // }
                 },
             )
         },
