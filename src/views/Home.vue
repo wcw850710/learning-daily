@@ -161,6 +161,18 @@ export default {
                                         .remove()
                                 }
                             })
+                        this.$db
+                            .ref(`${this.username}/webs`)
+                            .orderByChild('url')
+                            .equalTo(url)
+                            .once('value', snapshot => {
+                                const data = snapshot.val()
+                                for (let uuid in data) {
+                                    this.$db
+                                        .ref(`${this.username}/webs/${uuid}`)
+                                        .remove()
+                                }
+                            })
                     }
                 },
             )
