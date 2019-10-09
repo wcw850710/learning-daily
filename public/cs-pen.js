@@ -75,11 +75,11 @@
             cloneLine.style.zIndex = '10000'
             cloneLine.style.cursor = 'pointer'
             line.addEventListener(`dblclick`, () => {
-                const { width, x, y } = cloneLine.getClientRects()[0]
+                const { width, left, top } = cloneLine.style
                 const lineData = {
-                    width,
-                    x,
-                    y,
+                    width: Number(width.split('px')[0]),
+                    x: Number(left.split('px')[0]),
+                    y: Number(top.split('px')[0]),
                 }
                 chrome.runtime.sendMessage(
                     { mode: 'removeLine', lineData },

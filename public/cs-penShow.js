@@ -21,11 +21,11 @@
                     z-index: 10000;
                 `
                 line.addEventListener(`dblclick`, () => {
-                    const { width, x, y } = line.getClientRects()[0]
+                    const { width, left, top } = line.style
                     const lineData = {
-                        width,
-                        x,
-                        y,
+                        width: Number(width.split('px')[0]),
+                        x: Number(left.split('px')[0]),
+                        y: Number(top.split('px')[0]),
                     }
                     chrome.runtime.sendMessage(
                         { mode: 'removeLine', lineData },
