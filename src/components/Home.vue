@@ -175,8 +175,26 @@ export default {
         urlRouterPush(list) {
             const { url, isChecked } = list
             chrome.tabs.query({ currentWindow: true, active: true }, tab => {
-                list.isChecked = true
                 chrome.tabs.update(tab.id, { url })
+                this.$db
+                    .ref(this.refLists)
+                    .orderByChild('date')
+                    .equalTo(this.today)
+                    .once('value', snapshot => {
+                        const data = snapshot.val()
+                        for (let uuid in data) {
+                            if (data[uuid].isChecked) {
+                                break
+                            }
+                            if (data[uuid].url === url) {
+                                list.isChecked = true
+                                this.$db
+                                    .ref(this.refLists + `/${uuid}/isChecked`)
+                                    .update({ ...data[uuid], isChecked: true })
+                                break
+                            }
+                        }
+                    })
             })
         },
         draw() {
@@ -202,6 +220,5 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
 </style>
