@@ -58,8 +58,7 @@ export default {
                         chrome.storage.local.set(
                             { username: this.username },
                             () => {
-                                const bg = chrome.extension.getBackgroundPage()
-                                bg.tipNums()
+                                this.$bg.tipNums()
                                 this.$router.push('/')
                             },
                         )

@@ -4,6 +4,7 @@ import routes from './router'
 import AppComponent from './App/App.vue'
 
 const bg = chrome.extension.getBackgroundPage()
+Vue.prototype.$bg = bg
 Vue.prototype.$db = bg.$db()
 
 Vue.component('app-component', AppComponent)

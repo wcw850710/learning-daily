@@ -41,7 +41,8 @@
             ><i class="fas fa-pencil-alt"></i></button>
             <button
                 class="footer__btn-eye"
-                @click="draw"
+                :class="{'footer__btn-eye--show': isShowPen}"
+                @click="togglePen"
             ><i class="fas fa-eye"></i></button>
             <button
                 class="footer__btn-increase"
@@ -68,6 +69,7 @@ export default {
             // totalUrl: [],
             times: [0, 1, 3, 6, 14, 29, 89],
             isShowDescription: false,
+            isShowPen: false,
         }
     },
     methods: {
@@ -75,8 +77,7 @@ export default {
             this.isShowDescription = !this.isShowDescription
         },
         formatDate(time) {
-            const bg = chrome.extension.getBackgroundPage()
-            return bg.formatDate(time)
+            return this.$bg.formatDate(time)
         },
         // fetchAllLists() {
         //     this.$db.ref(this.refLists).once('value', snapshot => {
@@ -197,7 +198,12 @@ export default {
         },
         draw() {
             chrome.tabs.executeScript(null, {
-                file: './content-script.js',
+                file: './cs-pen.js',
+            })
+        },
+        togglePen() {
+            chrome.tabs.executeScript(null, {
+                file: './cs-penShow.js',
             })
         },
     },

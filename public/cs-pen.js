@@ -1,20 +1,13 @@
-// import firebase from 'firebase/app'
-// import 'firebase/auth'
-// import 'firebase/database'
-// import DB_CONFIG from '@/DB_CONFIG'
-
-// const app = firebase.initializeApp({ databaseURL: DB_CONFIG.databaseURL })
-// const db = app.database()
 ;(() => {
     let isDown = false
     let downPageXY = { x: 0, y: 0 }
     const body = document.body
     const line = document.createElement('i')
     const canvas = document.createElement('div')
+    let sentData = { translateX: 0 }
     canvas.style.cssText = `
                         width: 100%;
                         height: ${document.body.scrollHeight}px;
-                        background-color: #ff87873b;
                         position: absolute;
                         left: 0;
                         top: 0;
@@ -35,20 +28,29 @@
         canvas.appendChild(line)
         downPageXY.x = x
         downPageXY.y = y
+        sentData.x = x
+        sentData.y = y
         isDown = true
     })
     canvas.addEventListener('mousemove', ev => {
         if (isDown) {
             const { pageX: x } = ev
             const { x: ox } = downPageXY
-            line.style.width = Math.abs(x - ox) + 'px'
+            const width = Math.abs(x - ox)
+            line.style.width = width + 'px'
+            sentData.width = width
             if (x - ox < 0) {
-                line.style.transform = `translateX(-${Math.abs(x - ox)}px)`
+                sentData.translateX = -width
+                line.style.transform = `translateX(-${width}px)`
             }
         }
     })
     canvas.addEventListener('mouseup', () => {
         isDown = false
+        chrome.runtime.sendMessage({
+            send: true,
+            data: sentData,
+        })
         body.removeChild(canvas)
     })
     body.appendChild(canvas)

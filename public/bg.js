@@ -50,9 +50,46 @@ function tipNums() {
     })
 }
 
-function pushLinesFetchData(lineData) {
+function pushLinesFetchData(url, lineData) {
     chrome.storage.local.get(['username'], result => {
         const username = result.username
-        db.ref(`${username}/lines`).push(lineData)
+        db.ref(`${username}/webs`)
+            .orderByChild('url')
+            .equalTo(url)
+            .once('value', snapshot => {
+                const data = snapshot.val()
+                const pushRefData = uuid =>
+                    db.ref(`${username}/webs/${uuid}/lines`).push(lineData)
+                if (!data) {
+                    db.ref(`${username}/webs`)
+                        .push({ url })
+                        .then(({ key: uuid }) => {
+                            pushRefData(uuid)
+                        })
+                } else {
+                    for (let uuid in data) {
+                        pushRefData(uuid)
+                    }
+                }
+            })
     })
 }
+
+chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
+    const { send, url, data } = req
+    if (send) {
+        pushLinesFetchData(sender.url, data)
+    } else {
+        chrome.storage.local.get(['username'], result => {
+            const username = result.username
+            db.ref(`${username}/webs`)
+                .orderByChild('url')
+                .equalTo(sender.url)
+                .once('value', snapshot => {
+                    const data = snapshot.val()
+                    sendRes(data[Object.keys(data)[0]])
+                })
+        })
+    }
+    return true
+})
