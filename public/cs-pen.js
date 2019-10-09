@@ -1,12 +1,21 @@
 ;(() => {
+    const body = document.body
+    const canvas = document.createElement('div')
+    const line = document.createElement('i')
+    const followCircle = document.createElement('i')
     let isDown = false
     let downPageXY = { x: 0, y: 0 }
-    const body = document.body
-    const line = document.createElement('i')
     let cloneLine = null
-    const canvas = document.createElement('div')
     let sentData = { translateX: 0 }
     line.className = 'my-important-pen'
+    followCircle.style.cssText = `
+        width: 6px;
+        height: 6px;
+        background: red;
+        border-radius: 50%;
+        position: fixed;
+        z-index: 10000;
+    `
     canvas.style.cssText = `
                         width: 100%;
                         height: ${document.body.scrollHeight}px;
@@ -14,13 +23,14 @@
                         left: 0;
                         top: 0;
                         z-index: 10000;
+                        cursor: none;
                     `
     line.className = 'my-important-pen'
     canvas.addEventListener('mousedown', ev => {
         const { pageX: x, pageY: y } = ev
         line.style.cssText = `
                             width: 0;
-                            height: 2px;
+                            height: 3px;
                             background-color: red;
                             border-radius: 10px;
                             position: absolute;
@@ -35,8 +45,10 @@
         isDown = true
     })
     canvas.addEventListener('mousemove', ev => {
+        const { pageX: x, clientX, clientY } = ev
+        followCircle.style.left = clientX + 'px'
+        followCircle.style.top = clientY + 'px'
         if (isDown) {
-            const { pageX: x } = ev
             const { x: ox } = downPageXY
             const width = Math.abs(x - ox)
             line.style.width = width + 'px'
@@ -80,5 +92,6 @@
             body.appendChild(cloneLine)
         }
     })
+    canvas.appendChild(followCircle)
     body.appendChild(canvas)
 })()

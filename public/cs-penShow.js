@@ -10,7 +10,7 @@
                 line.className = 'my-important-pen'
                 line.style.cssText = `
                     width: ${current.width}px;
-                    height: 2px;
+                    height: 3px;
                     background-color: red;
                     border-radius: 10px;
                     position: absolute;
