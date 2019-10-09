@@ -2,13 +2,9 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import routes from './router'
 import AppComponent from './App/App.vue'
-import firebase from 'firebase/app'
-import 'firebase/auth'
-import 'firebase/database'
-import firebaseConfig from '@/firebaseConfig'
 
-const app = firebase.initializeApp({ databaseURL: firebaseConfig.databaseURL })
-Vue.prototype.$db = app.database()
+const bg = chrome.extension.getBackgroundPage()
+Vue.prototype.$db = bg.$db()
 
 Vue.component('app-component', AppComponent)
 Vue.use(VueRouter)

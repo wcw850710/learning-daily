@@ -11,6 +11,10 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig)
 const db = app.database()
 
+function $db() {
+    return db
+}
+
 function formatDate(time = new Date()) {
     const year = time.getFullYear()
     const month = String(time.getMonth() + 1).padStart(2, '0')
@@ -34,7 +38,6 @@ function tipNums() {
                             length++
                         }
                     }
-                    console.log(length)
                     chrome.browserAction.setBadgeText({
                         text: String(length),
                     })
@@ -44,5 +47,12 @@ function tipNums() {
                     })
                 }
             })
+    })
+}
+
+function pushLinesFetchData(lineData) {
+    chrome.storage.local.get(['username'], result => {
+        const username = result.username
+        db.ref(`${username}/lines`).push(lineData)
     })
 }
