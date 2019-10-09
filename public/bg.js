@@ -11,4 +11,38 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig)
 const db = app.database()
 
-chrome.browserAction.setBadgeText({ text: '-' })
+function formatDate(time = new Date()) {
+    const year = time.getFullYear()
+    const month = String(time.getMonth() + 1).padStart(2, '0')
+    const date = String(time.getDate()).padStart(2, '0')
+    const formatDate = `${year}-${month}-${date}`
+    return formatDate
+}
+
+function tipNums() {
+    chrome.storage.local.get(['username'], result => {
+        const username = result.username
+        db.ref(`${username}/lists`)
+            .orderByChild('date')
+            .equalTo(formatDate(new Date()))
+            .on('value', snapshot => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val()
+                    let length = 0
+                    for (let uuid in data) {
+                        if (!data[uuid].isChecked) {
+                            length++
+                        }
+                    }
+                    console.log(length)
+                    chrome.browserAction.setBadgeText({
+                        text: String(length),
+                    })
+                } else {
+                    chrome.browserAction.setBadgeText({
+                        text: '0',
+                    })
+                }
+            })
+    })
+}

@@ -55,8 +55,14 @@ export default {
                     } else if (data.password !== this.hash()) {
                         return (this.tip = '使用者密碼不正確')
                     } else {
-                        window.localStorage.setItem('username', this.username)
-                        this.$router.push('/')
+                        chrome.storage.local.set(
+                            { username: this.username },
+                            () => {
+                                const bg = chrome.extension.getBackgroundPage()
+                                bg.tipNums()
+                                this.$router.push('/')
+                            },
+                        )
                     }
                 })
             } else {

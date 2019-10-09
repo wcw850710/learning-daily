@@ -64,6 +64,7 @@ export default {
         return {
             // lists: [],
             todayLists: [],
+            username: '',
             // totalUrl: [],
             times: [0, 1, 3, 6, 14, 29, 89],
             isShowDescription: false,
@@ -73,12 +74,9 @@ export default {
         toggleDescription() {
             this.isShowDescription = !this.isShowDescription
         },
-        formatDate(time = new Date()) {
-            const year = time.getFullYear()
-            const month = String(time.getMonth() + 1).padStart(2, '0')
-            const date = String(time.getDate()).padStart(2, '0')
-            const formatDate = `${year}-${month}-${date}`
-            return formatDate
+        formatDate(time) {
+            const bg = chrome.extension.getBackgroundPage()
+            return bg.formatDate(time)
         },
         // fetchAllLists() {
         //     this.$db.ref(this.refLists).once('value', snapshot => {
@@ -207,15 +205,15 @@ export default {
         today() {
             return this.formatDate(new Date())
         },
-        username() {
-            return window.localStorage.getItem('username')
-        },
         refLists() {
             return `/${this.username}/lists`
         },
     },
     created() {
-        this.pipeFetch(/*this.fetchAllLists,*/ this.fetchTodayLists)
+        chrome.storage.local.get(['username'], result => {
+            this.username = result.username
+            this.pipeFetch(/*this.fetchAllLists,*/ this.fetchTodayLists)
+        })
     },
 }
 </script>
