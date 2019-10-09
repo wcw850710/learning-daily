@@ -3,8 +3,10 @@
     let downPageXY = { x: 0, y: 0 }
     const body = document.body
     const line = document.createElement('i')
+    let cloneLine = null
     const canvas = document.createElement('div')
     let sentData = { translateX: 0 }
+    line.className = 'my-important-pen'
     canvas.style.cssText = `
                         width: 100%;
                         height: ${document.body.scrollHeight}px;
@@ -13,6 +15,7 @@
                         top: 0;
                         z-index: 10000;
                     `
+    line.className = 'my-important-pen'
     canvas.addEventListener('mousedown', ev => {
         const { pageX: x, pageY: y } = ev
         line.style.cssText = `
@@ -42,6 +45,7 @@
                 sentData.translateX = -width
                 line.style.transform = `translateX(-${width}px)`
             }
+            cloneLine = line
         }
     })
     canvas.addEventListener('mouseup', () => {
@@ -51,6 +55,30 @@
             data: sentData,
         })
         body.removeChild(canvas)
+        const pens = [
+            ...document.body.getElementsByClassName('my-important-pen'),
+        ]
+        if (pens.length) {
+            cloneLine.style.zIndex = '10000'
+            cloneLine.style.cursor = 'pointer'
+            line.addEventListener(`dblclick`, () => {
+                const { width, x, y } = cloneLine.getClientRects()[0]
+                const lineData = {
+                    width,
+                    x,
+                    y,
+                }
+                chrome.runtime.sendMessage(
+                    { mode: 'removeLine', lineData },
+                    res => {
+                        if (res) {
+                            document.body.removeChild(cloneLine)
+                        }
+                    },
+                )
+            })
+            body.appendChild(cloneLine)
+        }
     })
     body.appendChild(canvas)
 })()

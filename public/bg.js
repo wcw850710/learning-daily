@@ -88,6 +88,35 @@ chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
             pushLinesFetchData(url, data)
             break
         case 'removeLine':
+            const { lineData } = req
+            chrome.storage.local.get(['username'], result => {
+                const username = result.username
+                db.ref(`${username}/webs`)
+                    .orderByChild('url')
+                    .equalTo(url)
+                    .once('value', snapshot => {
+                        const data = snapshot.val()
+                        const key = Object.keys(data)[0]
+                        db.ref(`${username}/webs/${key}/lines`)
+                            .orderByChild('width')
+                            .equalTo(lineData.width)
+                            .once('value', snapshot => {
+                                const data = snapshot.val()
+                                for (let uuid in data) {
+                                    if (
+                                        data[uuid].x === lineData.x &&
+                                        data[uuid].y === lineData.y
+                                    ) {
+                                        db.ref(
+                                            `${username}/webs/${key}/lines/${uuid}`,
+                                        )
+                                            .remove()
+                                            .then(() => sendRes(true))
+                                    }
+                                }
+                            })
+                    })
+            })
             break
         case 'toggleLines':
             chrome.storage.local.get(['username'], result => {

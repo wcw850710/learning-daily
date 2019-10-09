@@ -20,6 +20,22 @@
                     cursor: pointer;
                     z-index: 10000;
                 `
+                line.addEventListener(`dblclick`, () => {
+                    const { width, x, y } = line.getClientRects()[0]
+                    const lineData = {
+                        width,
+                        x,
+                        y,
+                    }
+                    chrome.runtime.sendMessage(
+                        { mode: 'removeLine', lineData },
+                        res => {
+                            if (res) {
+                                document.body.removeChild(line)
+                            }
+                        },
+                    )
+                })
                 fragment.appendChild(line)
             }
             document.body.appendChild(fragment)

@@ -32,13 +32,10 @@
                         :title="list.url"
                         @click="urlRouterPush(list)"
                     >{{index + 1}}</li>
+                    <h1 v-if="!filterLists(day).length && day === today">今日暫無復習項目</h1>
                 </ul>
             </div>
         </Fragment>
-        <!-- <section
-            class="content"
-            v-else
-        >今日暫無復習項目</section> -->
         <footer class="footer">
             <button
                 class="footer__btn-pen"
@@ -231,6 +228,3 @@ export default {
     },
 }
 </script>
-
-<style scoped lang="scss">
-</style>
