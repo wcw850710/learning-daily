@@ -109,30 +109,34 @@ export default {
                 fnc()
             })
         },
-        timesLoopFunc(func) {
-            const day = 86400000
-            for (let i = 0, length = this.times.length; i < length; i++) {
-                let time = this.times[i]
-                const formatDate = this.formatDate(
-                    new Date(new Date().getTime() + day * time),
-                )
-                func(formatDate)
-            }
-        },
         setData() {
             chrome.tabs.query(
                 { active: true, lastFocusedWindow: true },
                 tabs => {
                     const url = tabs[0].url
                     if (url) {
-                        this.timesLoopFunc(formatDate => {
+                        const day = 86400000
+                        this.todayLists.push({
+                            url,
+                            date: this.formatDate(new Date()),
+                            isChecked: false,
+                        })
+                        for (
+                            let i = 0, length = this.times.length;
+                            i < length;
+                            i++
+                        ) {
+                            let time = this.times[i]
+                            const formatDate = this.formatDate(
+                                new Date(new Date().getTime() + day * time),
+                            )
                             const pushData = {
                                 url,
                                 date: formatDate,
                                 isChecked: false,
                             }
                             this.$db.ref(this.refLists).push(pushData)
-                        })
+                        }
                     }
                 },
             )
@@ -143,6 +147,27 @@ export default {
                 tabs => {
                     const url = tabs[0].url
                     if (url) {
+                        const todayListsLength = this.todayLists.length
+                        let minus = 0
+                        for (let i = 0; i < todayListsLength; i++) {
+                            const current = this.todayLists[i - minus]
+                            if (url === current.url) {
+                                this.todayLists.splice(i - minus, 1)
+                                minus++
+                            }
+                        }
+                        this.$db
+                            .ref(this.refLists)
+                            .orderByChild('url')
+                            .equalTo(url)
+                            .once('value', snapshot => {
+                                const data = snapshot.val()
+                                for (let uuid in data) {
+                                    this.$db
+                                        .ref(this.refLists + `/${uuid}`)
+                                        .remove()
+                                }
+                            })
                     }
                 },
             )
