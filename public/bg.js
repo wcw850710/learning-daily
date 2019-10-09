@@ -102,7 +102,6 @@ chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
                             .equalTo(lineData.width)
                             .once('value', snapshot => {
                                 const data = snapshot.val()
-                                console.log(data, lineData)
                                 for (let uuid in data) {
                                     if (
                                         data[uuid].x === lineData.x &&
