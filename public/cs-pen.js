@@ -46,7 +46,7 @@
     })
     canvas.addEventListener('mousemove', ev => {
         const { pageX: x, clientX, clientY } = ev
-        followCircle.style.left = clientX + 'px'
+        followCircle.style.left = clientX - 3 + 'px'
         followCircle.style.top = clientY + 'px'
         if (isDown) {
             const { x: ox } = downPageXY
