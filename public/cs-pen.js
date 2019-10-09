@@ -45,10 +45,11 @@
         isDown = true
     })
     canvas.addEventListener('mousemove', ev => {
-        const { pageX: x, clientX, clientY } = ev
+        const { clientX, clientY } = ev
         followCircle.style.left = clientX - 3 + 'px'
         followCircle.style.top = clientY + 'px'
         if (isDown) {
+            const { pageX: x } = ev
             const { x: ox } = downPageXY
             const width = Math.abs(x - ox)
             line.style.width = width + 'px'
