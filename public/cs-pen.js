@@ -23,7 +23,6 @@
                             position: absolute;
                             left: ${x}px;
                             top: ${y}px;
-                            z-index: 999;
                         `
         canvas.appendChild(line)
         downPageXY.x = x

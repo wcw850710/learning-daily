@@ -1,25 +1,13 @@
 ;(() => {
-    const canvas = document.getElementById('my-pen-canvas')
-
-    if (!canvas) {
+    const pens = [...document.body.getElementsByClassName('my-important-pen')]
+    if (!pens.length) {
         const fragment = document.createDocumentFragment()
-        const newCanvas = document.createElement(`div`)
-        newCanvas.id = 'my-pen-canvas'
-        newCanvas.style.cssText = `
-            width: 100%;
-            height: ${document.body.scrollHeight}px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            z-index: 10000;
-            pointer-events: none;
-        `
         chrome.runtime.sendMessage({ send: false }, res => {
             const data = res.lines
-            console.log(res)
             for (let uuid in data) {
                 const line = document.createElement(`i`)
                 const current = data[uuid]
+                line.className = 'my-important-pen'
                 line.style.cssText = `
                     width: ${current.width}px;
                     height: 2px;
@@ -29,14 +17,16 @@
                     left: ${current.x}px;
                     top: ${current.y}px;
                     transform: translateX(${current.translateX}px);
-                    z-index: 999;
+                    cursor: pointer;
+                    z-index: 10000;
                 `
-                newCanvas.appendChild(line)
+                fragment.appendChild(line)
             }
-            fragment.appendChild(newCanvas)
             document.body.appendChild(fragment)
         })
     } else {
-        document.body.removeChild(canvas)
+        pens.forEach(pen => {
+            document.body.removeChild(pen)
+        })
     }
 })()

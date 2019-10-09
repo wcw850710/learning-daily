@@ -76,7 +76,11 @@ function pushLinesFetchData(url, lineData) {
 }
 
 chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
-    const { send, url, data } = req
+    const { mode, url, data } = req
+    switch (mode) {
+        case 'sendLine':
+            break
+    }
     if (send) {
         pushLinesFetchData(sender.url, data)
     } else {
