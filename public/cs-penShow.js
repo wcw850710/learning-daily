@@ -2,7 +2,7 @@
     const pens = [...document.body.getElementsByClassName('my-important-pen')]
     if (!pens.length) {
         const fragment = document.createDocumentFragment()
-        chrome.runtime.sendMessage({ send: false }, res => {
+        chrome.runtime.sendMessage({ mode: 'toggleLines' }, res => {
             const data = res.lines
             for (let uuid in data) {
                 const line = document.createElement(`i`)

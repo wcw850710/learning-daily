@@ -38,12 +38,17 @@ function tipNums() {
                             length++
                         }
                     }
+                    if (length === 0) {
+                        length = ''
+                    } else {
+                        length = String(length)
+                    }
                     chrome.browserAction.setBadgeText({
-                        text: String(length),
+                        text: length,
                     })
                 } else {
                     chrome.browserAction.setBadgeText({
-                        text: '0',
+                        text: '',
                     })
                 }
             })
@@ -76,24 +81,26 @@ function pushLinesFetchData(url, lineData) {
 }
 
 chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
-    const { mode, url, data } = req
+    const { mode, data } = req
+    const url = sender.url
     switch (mode) {
         case 'sendLine':
+            pushLinesFetchData(url, data)
             break
-    }
-    if (send) {
-        pushLinesFetchData(sender.url, data)
-    } else {
-        chrome.storage.local.get(['username'], result => {
-            const username = result.username
-            db.ref(`${username}/webs`)
-                .orderByChild('url')
-                .equalTo(sender.url)
-                .once('value', snapshot => {
-                    const data = snapshot.val()
-                    sendRes(data[Object.keys(data)[0]])
-                })
-        })
+        case 'removeLine':
+            break
+        case 'toggleLines':
+            chrome.storage.local.get(['username'], result => {
+                const username = result.username
+                db.ref(`${username}/webs`)
+                    .orderByChild('url')
+                    .equalTo(url)
+                    .once('value', snapshot => {
+                        const data = snapshot.val()
+                        sendRes(data[Object.keys(data)[0]])
+                    })
+            })
+            break
     }
     return true
 })

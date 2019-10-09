@@ -47,7 +47,7 @@
     canvas.addEventListener('mouseup', () => {
         isDown = false
         chrome.runtime.sendMessage({
-            send: true,
+            mode: 'sendLine',
             data: sentData,
         })
         body.removeChild(canvas)
