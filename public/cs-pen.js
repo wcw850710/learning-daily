@@ -1,4 +1,9 @@
-;(() => {
+;(function draw() {
+    const canvasDom = document.getElementById('my-important-pen-canvas')
+    if (canvasDom) {
+        return document.body.removeChild(canvasDom)
+    }
+
     const body = document.body
     const canvas = document.createElement('div')
     const line = document.createElement('i')
@@ -7,6 +12,7 @@
     let downPageXY = { x: 0, y: 0 }
     let cloneLine = null
     let sentData = { translateX: 0 }
+    canvas.id = 'my-important-pen-canvas'
     line.className = 'my-important-pen'
     followCircle.style.cssText = `
         width: 6px;
@@ -93,6 +99,14 @@
             body.appendChild(cloneLine)
         }
     })
+    function windowKeydownEvent(ev) {
+        const { key } = ev
+        if (key === 'Escape') {
+            draw()
+            window.removeEventListener('keydown', windowKeydownEvent)
+        }
+    }
+    window.addEventListener('keydown', windowKeydownEvent)
     canvas.appendChild(followCircle)
     body.appendChild(canvas)
 })()

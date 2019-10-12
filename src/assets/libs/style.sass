@@ -1,0 +1,26 @@
+@import './var'
+
+@keyframes fade-slider-in
+    0%
+        opacity: 0
+        transform: translate(-50%, -10px)
+    10%
+        opacity: 1
+        transform: translate(-50%, 0)
+    11%
+        transform: translate(-50%, 0)
+
+.my__alert
+    color: $red
+    background: #ffe4e4
+    border: 1px solid #ecc4c4
+    font-size: 13px
+    width: 222px
+    margin-bottom: 10px
+    border-radius: 5px
+    padding: 15px
+    position: absolute
+    left: 50%
+    top: 30px
+    transform: translateX(-50%)
+    animation: fade-slider-in 3s ease forwards

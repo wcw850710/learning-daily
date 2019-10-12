@@ -1,5 +1,5 @@
-import Home from '@/views/Home'
-import Login from '@/views/Login'
+import Home from '@/popup/views/Home'
+import Login from '@/popup/views/Login'
 
 const routes = [
     { path: '/login', component: Login },

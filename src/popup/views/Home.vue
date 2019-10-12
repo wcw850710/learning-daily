@@ -59,8 +59,7 @@
 </template>
 
 <script>
-import fontAwesome from '@/assets/fontawesome/css/all.min.css'
-import Fragment from '@/components/Fragment'
+import Fragment from '../components/Fragment'
 
 export default {
     name: 'HelloWorld',
@@ -201,6 +200,14 @@ export default {
                     })
             })
         },
+        keydownToDraw(ev) {
+            const { key, ctrlKey } = ev
+            if (key === 'q') {
+                this.draw()
+            } else if (key === 'w') {
+                this.togglePen()
+            }
+        },
         draw() {
             chrome.tabs.executeScript(null, {
                 file: './cs-pen.js',
@@ -237,6 +244,12 @@ export default {
             this.username = result.username
             this.fetchLists()
         })
+    },
+    mounted() {
+        window.addEventListener('keydown', this.keydownToDraw)
+    },
+    beforeDestroy() {
+        window.removeEventListener('keydown', this.keydownToDraw)
     },
 }
 </script>
