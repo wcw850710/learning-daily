@@ -72,6 +72,7 @@
         chrome.runtime.sendMessage({
             mode: 'sendLine',
             data: sentData,
+            windowWidth: window.innerWidth,
         })
         body.removeChild(canvas)
         const pens = [
@@ -88,7 +89,10 @@
                     y: Number(top.split('px')[0]),
                 }
                 chrome.runtime.sendMessage(
-                    { mode: 'removeLine', lineData },
+                    {
+                        mode: 'removeLine',
+                        lineData,
+                    },
                     res => {
                         if (res) {
                             document.body.removeChild(cloneLine)

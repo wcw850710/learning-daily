@@ -1,0 +1,23 @@
+@import '../style/var'
+
+.modal
+    display: flex
+    align-items: center
+    justify-content: center
+    width: 100%
+    height: 100%
+    position: fixed
+    left: 0
+    top: 0
+    z-index: 999
+    &__bk-screen
+        background: rgba($bk, .7)
+        width: 100%
+        height: 100%
+        position: absolute
+        left: 0
+        top: 0
+        z-index: -1
+    &__content
+        min-width: 260px
+        background: $w

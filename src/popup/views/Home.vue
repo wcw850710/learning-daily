@@ -4,7 +4,7 @@
             <div class="header__title">每天學一點</div>
             <div class="header__question"><i class="fas fa-question"></i></div>
         </header>
-        <section class="fighting-word">{{fightingWord ? fightingWord : '每天學一點，成功近一點'}}</section>
+        <section class="fighting-word">{{fightingWord ? fightingWord : '每天學一點，成功近一點。'}}</section>
         <section
             class="dates-banner"
             @wheel="wheelChangeDayCurrent($event)"
@@ -52,8 +52,8 @@
                         @click="urlCreate(list)"
                     >
                         <li class="content__table__tr__td content__body__tr__td">{{index+1}}</li>
-                        <li class="content__table__tr__td content__body__tr__td"></li>
-                        <li class="content__table__tr__td content__body__tr__td"><b>12</b></li>
+                        <li class="content__table__tr__td content__body__tr__td">{{list.name}}</li>
+                        <li class="content__table__tr__td content__body__tr__td"><b>{{list.length}}</b></li>
                     </ul>
                 </Fragment>
             </div>
@@ -95,7 +95,7 @@
             <div class="footer__list">
                 <button
                     class="footer__list__btn footer__list__btn-increase"
-                    @click="setData"
+                    @click="showCreateModal"
                 ><i class="fas fa-plus"></i>
                 </button>
                 <span class="footer__list__text">
@@ -113,11 +113,33 @@
                 </span>
             </div>
         </footer>
+        <Modal
+            ref="createModalRef"
+            class="create-modal"
+        >
+            <div class="create-modal__title">新增記憶事項</div>
+            <div class="create-modal__list">
+                <input
+                    class="create-modal__list__input"
+                    :class="{'create-modal__list__input--valid': createListName}"
+                    type="text"
+                    ref="createListNameRef"
+                    v-model="createListName"
+                    @keydown.enter="setData"
+                >
+                <label class="create-modal__list__name">名字</label>
+            </div>
+            <button
+                class="create-modal__btn"
+                @click="setData"
+            >新增</button>
+        </Modal>
     </main>
 </template>
 
 <script>
 import Fragment from '../components/Fragment'
+import Modal from '../components/Modal'
 
 export default {
     name: 'HelloWorld',
@@ -127,14 +149,17 @@ export default {
             username: '',
             fightingWord: '',
             dayCurrent: 3,
-            // totalUrl: [],
+            webs: [],
             times: [0, 1, 3, 6, 14, 29, 89],
             isShowDescription: false,
             isShowPen: false,
+            // add用
+            createListName: '',
         }
     },
     components: {
         Fragment,
+        Modal,
     },
     methods: {
         increaseDayCurrent() {
@@ -178,6 +203,20 @@ export default {
         formatDate(time) {
             return this.$bg.formatDate(time)
         },
+        fetchWebs() {
+            this.$db.ref(`/${this.username}/webs`).on('value', snapshot => {
+                const data = snapshot.val()
+                this.webs = []
+                for (let uuid in data) {
+                    const web = data[uuid]
+                    this.webs.push({
+                        url: web.url,
+                        length: Object.keys(web.lines).length,
+                        width: web.width || 1920,
+                    })
+                }
+            })
+        },
         fetchLists() {
             chrome.tabs.query(
                 { active: true, lastFocusedWindow: true },
@@ -200,7 +239,13 @@ export default {
                             const data = snapshot.val()
                             this.lists = []
                             for (let key in data) {
-                                this.lists.push(data[key])
+                                const length = this.webs.find(
+                                    web => web.url === data[key].url,
+                                ).length
+                                this.lists.push({
+                                    ...data[key],
+                                    length,
+                                })
                             }
                         })
                 },
@@ -211,6 +256,20 @@ export default {
                 list => list.date === this.recentSevenDays[this.dayCurrent],
             )
             return filterLists
+        },
+        showCreateModal() {
+            const ref = this.$refs.createModalRef
+            this.$refs.createModalRef.show(() => {
+                this.$nextTick(() => {
+                    this.$refs.createListNameRef.focus()
+                    window.removeEventListener('keydown', this.keydownToDraw)
+                })
+            })
+        },
+        hideCreateModal() {
+            const ref = this.$refs.createModalRef
+            this.$refs.createModalRef.hide()
+            window.addEventListener('keydown', this.keydownToDraw)
         },
         setData() {
             chrome.tabs.query(
@@ -231,10 +290,12 @@ export default {
                             const pushData = {
                                 url,
                                 date: formatDate,
+                                name: this.createListName,
                                 isChecked: false,
                             }
                             this.$db.ref(this.refLists).push(pushData)
                         }
+                        this.hideCreateModal()
                     }
                 },
             )
@@ -276,33 +337,34 @@ export default {
         urlCreate(list) {
             const { url, date, isChecked } = list
             chrome.tabs.query({ currentWindow: true, active: true }, tab => {
-                // console.log(window.screen.width, tab[0].width)
-                let createData = { url }
-                if (window.screen.width === tab[0].width) {
+                const createData = { url }
+                const findWeb = this.webs.find(web => web.url === url)
+                if (window.screen.width === findWeb.width) {
                     createData.state = 'maximized'
                 } else {
-                    // width +16
-                    createData.width = 1479
+                    createData.width = findWeb.width + 16
                 }
                 chrome.windows.create(createData)
-                // this.$db
-                //     .ref(this.refLists)
-                //     .orderByChild('date')
-                //     .equalTo(date)
-                //     .once('value', snapshot => {
-                //         const data = snapshot.val()
-                //         for (let uuid in data) {
-                //             if (data[uuid].isChecked) {
-                //                 break
-                //             }
-                //             if (data[uuid].url === url) {
-                //                 this.$db
-                //                     .ref(this.refLists + `/${uuid}/isChecked`)
-                //                     .update({ ...data[uuid], isChecked: true })
-                //                 break
-                //             }
-                //         }
-                //     })
+
+                this.$db
+                    .ref(this.refLists)
+                    .orderByChild('date')
+                    .equalTo(date)
+                    .once('value', snapshot => {
+                        const data = snapshot.val()
+
+                        for (let uuid in data) {
+                            if (data[uuid].isChecked) {
+                                break
+                            }
+                            if (data[uuid].url === url) {
+                                this.$db
+                                    .ref(this.refLists + `/${uuid}/isChecked`)
+                                    .update({ ...data[uuid], isChecked: true })
+                                break
+                            }
+                        }
+                    })
             })
         },
         keydownToDraw(ev) {
@@ -347,7 +409,10 @@ export default {
     created() {
         chrome.storage.local.get(['username'], result => {
             this.username = result.username
-            this.fetchLists()
+            new Promise(reslove => {
+                this.fetchWebs()
+                reslove()
+            }).then(res => this.fetchLists())
         })
         chrome.storage.local.get(['fightingWord'], result => {
             this.fightingWord = result.fightingWord

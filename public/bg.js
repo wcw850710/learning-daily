@@ -46,6 +46,9 @@ function tipNums() {
                     chrome.browserAction.setBadgeText({
                         text: length,
                     })
+                    chrome.browserAction.setBadgeBackgroundColor({
+                        color: '#FF663E',
+                    })
                 } else {
                     chrome.browserAction.setBadgeText({
                         text: '',
@@ -55,7 +58,7 @@ function tipNums() {
     })
 }
 
-function pushLinesFetchData(url, lineData) {
+function pushLinesFetchData(url, lineData, width) {
     chrome.storage.local.get(['username'], result => {
         const username = result.username
         db.ref(`${username}/webs`)
@@ -67,7 +70,7 @@ function pushLinesFetchData(url, lineData) {
                     db.ref(`${username}/webs/${uuid}/lines`).push(lineData)
                 if (!data) {
                     db.ref(`${username}/webs`)
-                        .push({ url })
+                        .push({ url, width })
                         .then(({ key: uuid }) => {
                             pushRefData(uuid)
                         })
@@ -80,55 +83,64 @@ function pushLinesFetchData(url, lineData) {
     })
 }
 
+function removeLinesFetchData(url, lineData, sendRes) {
+    chrome.storage.local.get(['username'], result => {
+        const username = result.username
+        db.ref(`${username}/webs`)
+            .orderByChild('url')
+            .equalTo(url)
+            .once('value', snapshot => {
+                const data = snapshot.val()
+                const key = Object.keys(data)[0]
+                db.ref(`${username}/webs/${key}/lines`)
+                    .orderByChild('width')
+                    .equalTo(lineData.width)
+                    .once('value', snapshot => {
+                        const data = snapshot.val()
+                        for (let uuid in data) {
+                            if (
+                                data[uuid].x === lineData.x &&
+                                data[uuid].y === lineData.y
+                            ) {
+                                db.ref(`${username}/webs/${key}/lines/${uuid}`)
+                                    .remove()
+                                    .then(() => sendRes(true))
+                            }
+                        }
+                    })
+            })
+    })
+}
+
+function toggleLinesFetchData(url, sendRes) {
+    chrome.storage.local.get(['username'], result => {
+        const username = result.username
+        db.ref(`${username}/webs`)
+            .orderByChild('url')
+            .equalTo(url)
+            .once('value', snapshot => {
+                const data = snapshot.val()
+                if (data) {
+                    sendRes(data[Object.keys(data)[0]])
+                } else {
+                    alert('此連結尚未有筆記')
+                }
+            })
+    })
+}
+
 chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
-    const { mode, data } = req
+    const { mode, data, lineData, windowWidth } = req
     const url = sender.url
     switch (mode) {
         case 'sendLine':
-            pushLinesFetchData(url, data)
+            pushLinesFetchData(url, data, windowWidth)
             break
         case 'removeLine':
-            const { lineData } = req
-            chrome.storage.local.get(['username'], result => {
-                const username = result.username
-                db.ref(`${username}/webs`)
-                    .orderByChild('url')
-                    .equalTo(url)
-                    .once('value', snapshot => {
-                        const data = snapshot.val()
-                        const key = Object.keys(data)[0]
-                        db.ref(`${username}/webs/${key}/lines`)
-                            .orderByChild('width')
-                            .equalTo(lineData.width)
-                            .once('value', snapshot => {
-                                const data = snapshot.val()
-                                for (let uuid in data) {
-                                    if (
-                                        data[uuid].x === lineData.x &&
-                                        data[uuid].y === lineData.y
-                                    ) {
-                                        db.ref(
-                                            `${username}/webs/${key}/lines/${uuid}`,
-                                        )
-                                            .remove()
-                                            .then(() => sendRes(true))
-                                    }
-                                }
-                            })
-                    })
-            })
+            removeLinesFetchData(url, lineData, sendRes)
             break
         case 'toggleLines':
-            chrome.storage.local.get(['username'], result => {
-                const username = result.username
-                db.ref(`${username}/webs`)
-                    .orderByChild('url')
-                    .equalTo(url)
-                    .once('value', snapshot => {
-                        const data = snapshot.val()
-                        sendRes(data[Object.keys(data)[0]])
-                    })
-            })
+            toggleLinesFetchData(url, sendRes)
             break
     }
     return true

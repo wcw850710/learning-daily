@@ -203,3 +203,57 @@
             font-size: 12px
             text-align: center
             transform: scale(.9)
+
+.create-modal
+    &__title
+        font-size: 16px
+        background: $green
+        color: $w
+        text-align: center
+        padding: 12px
+        margin-bottom: 30px
+    &__list
+        width: 80%
+        font-size: 15px
+        margin: 0 auto 25px
+        position: relative
+        &__name
+            color: $gray-txt
+            position: absolute
+            left: 10px
+            top: 50%
+            transform: translateY(-50%)
+            transition: .6s ease
+        &__input
+            appearance: none
+            width: 100%
+            padding: 10px
+            font-size: 15px
+            border: 0
+            border-bottom: 1px solid $gray
+            color: $bk
+            outline: none
+            transition: .6s ease
+            &:focus, &--valid
+                border-bottom-color: $green
+                + .create-modal__list__name
+                    color: $green
+                    top: calc(50% - 25px)
+    &__btn
+        width: 222px
+        appearance: none
+        color: $w
+        background-color: $green
+        border: 0
+        border-radius: 100px
+        cursor: pointer
+        text-align: center
+        height: 42px
+        font-size: 16px
+        transition: 0.6s ease
+        outline: none
+        margin: 0 auto 20px
+        display: block
+        &:hover
+            background-color: $green-light
+            color: $green

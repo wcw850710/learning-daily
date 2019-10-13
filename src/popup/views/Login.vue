@@ -12,6 +12,7 @@
             <input
                 class="login__input-wrapper__input"
                 :class="{'login__input-wrapper__input--valid': username}"
+                ref="usernameRef"
                 type="text"
                 v-model="username"
                 @keydown.enter="login"
@@ -116,7 +117,9 @@ export default {
     },
     watch: {},
     created() {},
-    mounted() {},
+    mounted() {
+        this.$refs.usernameRef.focus()
+    },
     beforeDestroy() {},
 }
 </script>

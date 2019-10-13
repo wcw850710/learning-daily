@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
-    "name": "PageMAker",
-    "description": "page maker",
+    "name": "每天學一點",
+    "description": "每天學一點，成功近一點",
     "version": "0",
     "options_page": "options.html",
     "icons": {
