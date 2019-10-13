@@ -9,6 +9,33 @@
     width: 100%
     font-size: 14px
 
+.header
+    width: 100%
+    background: $green
+    color: $w
+    height: 42px
+    font-size: 16px
+    font-weight: 900
+    display: flex
+    align-items: center
+    justify-content: space-between
+    padding: 0 21px
+    &__question
+        font-size: 12px
+        background: $w
+        color: $green
+        display: flex
+        align-items: center
+        justify-content: center
+        border-radius: 100%
+        width: 20px
+        height: 20px
+        cursor: pointer
+        transition: 0.6s ease
+        &:hover
+            color: $w
+            background: $green
+
 .title
     background: #000
     color: #fff
@@ -16,91 +43,163 @@
     text-align: center
     padding: 10px
 
-.content
-    flex: 1
-    padding: 12px 10px
-    font-size: 13px
-    display: flex
-    align-items: center
-    justify-content: space-between
+.fighting-word
+    color: $green
+    background: $green-light
+    padding: 10px 21px
     width: 100%
-    opacity: 0.6
-    font-size: 12px
-    &--today
-        background: #daf1ff
-        opacity: 1
-        font-size: 13px
-    &__date
-        min-width: 80px
-        padding: 0 6px 0 0
-        margin-right: 6px
-        border-right: 1px solid #000
-    &__lists
-        display: flex
-        align-items: center
-        justify-content: flex-start
-        flex-wrap: wrap
-        flex: 1
-        &__list
-            min-width: 8px
-            margin: 2px 3px
-            cursor: pointer
-            color: $blue
-            font-weight: 900
-            text-decoration: underline
-            text-align: center
-            &--checked
-                color: $gray
-                text-decoration: none
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
 
-.description
-    color: $gray
-    font-size: 12px
-    line-height: 1.3
+.dates-banner
     width: 100%
-    background: #eaeaea
-    &__title
-        color: #000
+    display: block
+    overflow: hidden
+    white-space: nowrap
+    padding: 10px 0
+    position: relative
+    &__prev
+        left: 0
+    &__next
+        right: 0
+    &__prev, &__next
+        appearance: none
+        padding: 0
+        border: 0
+        outline: none
         cursor: pointer
-        padding: 5px 10px
-        width: 100%
-        text-align: center
-        border-bottom: 1px solid #000
-        &__icon
-            margin-left: 8px
-            &--active
-                transform: rotate(180deg)
-    &__text
-        padding: 5px 9px
-        b
-            color: $red
-            margin: 0 2px
+        color: $green
+        background: $w
+        width: 21px
+        height: calc(100% - 20px)
+        position: absolute
+        top: 10px
+        z-index: 2
+    &__wrapper
+        transition: .3s ease
+        &__day
+            display: inline-block
+            vertical-align: middle
+            width: 50%
+            background: $green-light
+            color: $green
+            text-align: center
+            border-radius: 100px
+            padding: 12px 0
+            cursor: pointer
+            transition: 0.6s ease
+            &:hover, &--active
+                color: $w
+                background: $green
+            &:not(:last-child)
+                margin-right: 5%
+
+.content
+    width: 100%
+    min-height: 240px
+    padding: 10px 21px 30px
+    font-size: 15px
+    &__header
+        border-bottom: 1px solid $green
+    &__body
+        color: $green
+        &__tr
+            cursor: pointer
+            transition: 0.6s ease
+            font-weight: 900
+            &:nth-child(even)
+                background: $green-light
+            &:hover
+                background: $green-light
+            &__td
+                &:nth-child(2)
+                    white-space: nowrap
+                    overflow: hidden
+                    text-overflow: ellipsis
+                    padding-right: 10px
+                &:last-child
+                    b
+                        width: 25px
+                        height: 25px
+                        display: flex
+                        align-items: center
+                        justify-content: center
+                        color: $w
+                        background: $orange
+                        border-radius: 50%
+                        font-size: 13px
+            &--checked
+                color: $gray-txt
+                position: relative
+                &::before
+                    content: ''
+                    width: 92%
+                    height: 1px
+                    background-color: $gray-txt
+                    position: absolute
+                    left: 4%
+                    top: 50%
+                    transform: translateY(-50%)
+                .content__table__tr__td
+                    &:last-child
+                        b
+                            background: $gray
+                            color: $gray-txt
+    &__table
+        &__tr
+            display: flex
+            align-items: center
+            &__td
+                padding: 8px 0
+                &:nth-child(1)
+                    width: 50px
+                    padding-left: 21px
+                &:nth-child(2)
+                    flex: 1
+                &:nth-child(3)
+                    width: 55px
 
 .footer
-    width: 100%
-    padding: 6px
     display: flex
+    align-items: flex-start
     justify-content: space-between
-    align-items: center
-    &__btn
-        &-pen, &-eye, &-increase, &-delete
+    background: $green-light
+    padding: 9px 21px
+    width: 100%
+    &__list
+        display: flex
+        flex-direction: column
+        justify-content: center
+        align-items: center
+        cursor: pointer
+        &:hover
+            .footer__list__btn
+                color: $w
+                background: $green
+                box-shadow: 0 0 15px rgba($green, .8)
+        &__btn
             appearance: none
-            background: none
-            padding: 0
-            border: 0
             outline: none
+            border: 0
+            color: $green
+            background: $w
+            border-radius: 50%
+            width: 30px
+            height: 30px
+            display: flex
+            align-items: center
+            justify-content: center
             cursor: pointer
-            &:hover
-                opacity: 0.6
-        &-pen
-            color: $red
-            margin-right: 7px
-        &-eye
-            margin-right: auto
-            &--show
-                color: $red
-        &-increase
-            color: $blue
-            margin-right: 7px
-        &-delete
-            color: $gray
+            margin-bottom: 3px
+            transition: 0.6s ease
+            border: 1px solid $green
+            &-main
+                color: $w
+                background: $green
+                box-shadow: 0 0 15px $green
+        &__text
+            color: $green
+            font-size: 12px
+            text-align: center
+            transform: scale(.9)

@@ -1,59 +1,117 @@
 <template>
     <main class="main">
-        <section class="description">
-            <div
-                class="description__title"
-                @click="toggleDescription"
-            >詳細資訊<i
-                    class="description__title__icon fas fa-angle-down"
-                    :class="{'description__title__icon--active': isShowDescription}"
-                ></i></div>
-            <article
-                class="description__text"
-                v-if="isShowDescription"
-            >
-                此日誌複習時間採<b>艾賓浩斯記憶曲線</b>，分別為(<b>1、2、4、7、15、30、90</b>)天<b>7</b>次的復習。<br />附贈的<b>畫筆功能</b>，可以在自己不熟的地方畫線，以方便日後記憶。</article>
-        </section>
-        <Fragment
-            v-for="(day, index) in recentSevenDays"
-            :key="index"
+        <header class="header">
+            <div class="header__title">每天學一點</div>
+            <div class="header__question"><i class="fas fa-question"></i></div>
+        </header>
+        <section class="fighting-word">{{fightingWord ? fightingWord : '每天學一點，成功近一點'}}</section>
+        <section
+            class="dates-banner"
+            @wheel="wheelChangeDayCurrent($event)"
         >
-            <div
-                class="content"
-                :class="{'content--today': day === today}"
+            <button
+                class="dates-banner__prev"
+                @click="changeDayCurrent('minus')"
+            ><i class="fas fa-angle-left"></i></button>
+            <button
+                class="dates-banner__next"
+                @click="changeDayCurrent('increase')"
+            ><i class="fas fa-angle-right"></i></button>
+            <ul
+                class="dates-banner__wrapper"
+                :style="{transform: 'translateX(' + (dayCurrent * -55 + 25) + '%)'}"
             >
-                <div class="content__date">{{day}}</div>
-                <ul class="content__lists">
-                    <li
-                        v-for="(list, index) in filterLists(day)"
-                        :key="index"
-                        class="content__lists__list"
-                        :class="{'content__lists__list--checked': list.isChecked}"
-                        :title="list.url"
-                        @click="urlRouterPush(list)"
-                    >{{index + 1}}</li>
-                    <h1 v-if="!filterLists(day).length && day === today">今日暫無復習項目</h1>
+                <li
+                    class="dates-banner__wrapper__day"
+                    :class="{'dates-banner__wrapper__day--active': index === dayCurrent}"
+                    v-for="(day, index) in recentSevenDays"
+                    :key="index"
+                    @click="changeDayCurrent(index)"
+                >{{day}}{{index === 3 ? ' (今日)' : ''}}</li>
+            </ul>
+        </section>
+        <section
+            class="content"
+            v-if="filterLists().length"
+        >
+            <div class="content__table content__header">
+                <ul class="content__table__tr content__header__tr">
+                    <li class="content__table__tr__td content__header__tr__td"></li>
+                    <li class="content__table__tr__td content__header__tr__td">名字</li>
+                    <li class="content__table__tr__td content__header__tr__td">重點數</li>
                 </ul>
             </div>
-        </Fragment>
+            <div class="content__table content__body">
+                <Fragment
+                    v-for="(list, index) in filterLists()"
+                    :key="index"
+                >
+                    <ul
+                        class="content__table__tr content__body__tr"
+                        :class="{'content__body__tr--checked': list.isChecked}"
+                        @click="urlCreate(list)"
+                    >
+                        <li class="content__table__tr__td content__body__tr__td">{{index+1}}</li>
+                        <li class="content__table__tr__td content__body__tr__td"></li>
+                        <li class="content__table__tr__td content__body__tr__td"><b>12</b></li>
+                    </ul>
+                </Fragment>
+            </div>
+        </section>
+        <section
+            class="content"
+            v-else
+        >今日無需複習之項目</section>
         <footer class="footer">
-            <button
-                class="footer__btn-pen"
-                @click="draw"
-            ><i class="fas fa-pencil-alt"></i></button>
-            <button
-                class="footer__btn-eye"
-                :class="{'footer__btn-eye--show': isShowPen}"
-                @click="togglePen"
-            ><i class="fas fa-eye"></i></button>
-            <button
-                class="footer__btn-increase"
-                @click="setData"
-            ><i class="fas fa-plus"></i></button>
-            <button
-                class="footer__btn-delete"
-                @dblclick="deleteData"
-            ><i class="fas fa-trash-alt"></i></button>
+            <div class="footer__list">
+                <button
+                    class="footer__list__btn footer__list__btn-pen"
+                    @click="draw"
+                ><i class="fas fa-pencil-alt"></i>
+                </button>
+                <span class="footer__list__text">
+                    重點 (q)
+                </span>
+            </div>
+            <div class="footer__list">
+                <button
+                    class="footer__list__btn footer__list__btn-eye"
+                    :class="{'footer__list__btn-eye--show': isShowPen}"
+                    @click="togglePen"
+                ><i class="fas fa-eye"></i>
+                </button>
+                <span class="footer__list__text">
+                    顯示 (w)
+                </span>
+            </div>
+            <div class="footer__list">
+                <button class="footer__list__btn footer__list__btn-main">
+                    <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <span class="footer__list__text">
+                    選單
+                </span>
+            </div>
+            <div class="footer__list">
+                <button
+                    class="footer__list__btn footer__list__btn-increase"
+                    @click="setData"
+                ><i class="fas fa-plus"></i>
+                </button>
+                <span class="footer__list__text">
+                    新增
+                </span>
+            </div>
+            <div class="footer__list">
+                <button
+                    class="footer__list__btn footer__list__btn-delete"
+                    @dblclick="deleteData"
+                ><i class="fas fa-trash-alt"></i>
+                </button>
+                <span class="footer__list__text">
+                    刪除
+                </span>
+            </div>
         </footer>
     </main>
 </template>
@@ -67,6 +125,8 @@ export default {
         return {
             lists: [],
             username: '',
+            fightingWord: '',
+            dayCurrent: 3,
             // totalUrl: [],
             times: [0, 1, 3, 6, 14, 29, 89],
             isShowDescription: false,
@@ -77,6 +137,41 @@ export default {
         Fragment,
     },
     methods: {
+        increaseDayCurrent() {
+            if (this.dayCurrent + 1 > 6) {
+                return
+            }
+            this.dayCurrent++
+        },
+        minusDayCurrent() {
+            if (this.dayCurrent - 1 < 0) {
+                return
+            }
+            this.dayCurrent--
+        },
+        wheelChangeDayCurrent(ev) {
+            const { wheelDeltaY: dy } = ev
+            if (dy === -120) {
+                this.increaseDayCurrent()
+            } else {
+                this.minusDayCurrent()
+            }
+        },
+        changeDayCurrent(val) {
+            const type = typeof val
+            switch (type) {
+                case 'string':
+                    if (val === 'increase') {
+                        this.increaseDayCurrent()
+                    } else {
+                        this.minusDayCurrent()
+                    }
+                    break
+                case 'number':
+                    this.dayCurrent = val
+                    break
+            }
+        },
         toggleDescription() {
             this.isShowDescription = !this.isShowDescription
         },
@@ -111,8 +206,10 @@ export default {
                 },
             )
         },
-        filterLists(day) {
-            const filterLists = this.lists.filter(list => list.date === day)
+        filterLists() {
+            const filterLists = this.lists.filter(
+                list => list.date === this.recentSevenDays[this.dayCurrent],
+            )
             return filterLists
         },
         setData() {
@@ -176,28 +273,36 @@ export default {
                 },
             )
         },
-        urlRouterPush(list) {
+        urlCreate(list) {
             const { url, date, isChecked } = list
             chrome.tabs.query({ currentWindow: true, active: true }, tab => {
-                chrome.tabs.update(tab.id, { url })
-                this.$db
-                    .ref(this.refLists)
-                    .orderByChild('date')
-                    .equalTo(this.today)
-                    .once('value', snapshot => {
-                        const data = snapshot.val()
-                        for (let uuid in data) {
-                            if (data[uuid].isChecked) {
-                                break
-                            }
-                            if (data[uuid].url === url) {
-                                this.$db
-                                    .ref(this.refLists + `/${uuid}/isChecked`)
-                                    .update({ ...data[uuid], isChecked: true })
-                                break
-                            }
-                        }
-                    })
+                // console.log(window.screen.width, tab[0].width)
+                let createData = { url }
+                if (window.screen.width === tab[0].width) {
+                    createData.state = 'maximized'
+                } else {
+                    // width +16
+                    createData.width = 1479
+                }
+                chrome.windows.create(createData)
+                // this.$db
+                //     .ref(this.refLists)
+                //     .orderByChild('date')
+                //     .equalTo(date)
+                //     .once('value', snapshot => {
+                //         const data = snapshot.val()
+                //         for (let uuid in data) {
+                //             if (data[uuid].isChecked) {
+                //                 break
+                //             }
+                //             if (data[uuid].url === url) {
+                //                 this.$db
+                //                     .ref(this.refLists + `/${uuid}/isChecked`)
+                //                     .update({ ...data[uuid], isChecked: true })
+                //                 break
+                //             }
+                //         }
+                //     })
             })
         },
         keydownToDraw(ev) {
@@ -244,6 +349,9 @@ export default {
             this.username = result.username
             this.fetchLists()
         })
+        chrome.storage.local.get(['fightingWord'], result => {
+            this.fightingWord = result.fightingWord
+        })
     },
     mounted() {
         window.addEventListener('keydown', this.keydownToDraw)
@@ -253,3 +361,7 @@ export default {
     },
 }
 </script>
+
+<style lang="sass" scoped>
+@import '../style/home'
+</style>

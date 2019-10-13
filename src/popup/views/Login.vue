@@ -70,10 +70,16 @@ export default {
         login() {
             const loginRef = this.$refs.loginRef
             const chromeStorageSet = () => {
-                chrome.storage.local.set({ username: this.username }, () => {
-                    this.$bg.tipNums()
-                    this.$router.push('/')
-                })
+                chrome.storage.local.set(
+                    {
+                        username: this.username,
+                        fightingWord: this.fightingWord,
+                    },
+                    () => {
+                        this.$bg.tipNums()
+                        this.$router.push('/')
+                    },
+                )
             }
             if (this.username) {
                 this.$db.ref(`${this.username}`).once('value', snapshot => {
