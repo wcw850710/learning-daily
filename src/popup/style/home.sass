@@ -204,6 +204,42 @@
                 color: $w
                 background: $green
                 box-shadow: 0 0 15px $green
+                &__modal
+                    display: none
+                    &__list
+                        display: flex
+                        align-items: center
+                        justify-content: center
+                        &:not(:last-child)
+                            margin-bottom: 9px
+                        &__icon
+                            margin-right: 5px
+                        &__name
+                &__checkbox
+                    display: none
+                    &:checked
+                        ~ .footer__list__btn-main__modal
+                            display: block
+                            position: absolute
+                            left: 50%
+                            top: -15px
+                            transform: translate(-50%, -100%)
+                            padding: 12px
+                            min-width: 90px
+                            background: $w
+                            filter: drop-shadow(0 5px 10px rgba($green, .5))
+                            font-size: 12px
+                            color: $green
+                            &::before
+                                content: ''
+                                border-top: 10px solid $w
+                                border-bottom: 0 solid transparent
+                                border-left: 7px solid transparent
+                                border-right: 7px solid transparent
+                                position: absolute
+                                left: 50%
+                                bottom: 0
+                                transform: translate(-50%, 100%)
         &__nums
             background: $orange
             font-size: 12px

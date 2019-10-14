@@ -6,7 +6,6 @@
                 class="header__logout"
                 @click="logout"
             ><i class="fas fa-sign-out-alt"></i></div>
-            <!-- <div class="header__question"><i class="fas fa-question"></i></div> -->
         </header>
         <section class="fighting-word">{{fightingWord ? fightingWord : '每天學一點，成功近一點。'}}</section>
         <section
@@ -93,12 +92,24 @@
                 </span>
             </div>
             <div class="footer__list">
-                <button class="footer__list__btn footer__list__btn-main">
+                <label
+                    for="main-checkbox"
+                    class="footer__list__btn footer__list__btn-main"
+                >
                     <i class="fas fa-ellipsis-h"></i>
-                </button>
+                </label>
+                <input
+                    type="checkbox"
+                    id="main-checkbox"
+                    class="footer__list__btn-main__checkbox"
+                >
                 <span class="footer__list__text">
                     選單
                 </span>
+                <div class="footer__list__btn-main__modal">
+                    <div class="footer__list__btn-main__modal__list footer__list__btn-main__modal__list-question"><i class="footer__list__btn-main__modal__list__icon fas fa-chart-bar"></i><span class="footer__list__btn-main__modal__list__name">數據</span></div>
+                    <div class="footer__list__btn-main__modal__list footer__list__btn-main__modal__list-question"><i class="footer__list__btn-main__modal__list__icon fas fa-question-circle"></i><span class="footer__list__btn-main__modal__list__name">說明</span></div>
+                </div>
             </div>
             <div class="footer__list">
                 <button
