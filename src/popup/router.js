@@ -1,9 +1,7 @@
-import Home from '@/popup/views/Home'
-import Login from '@/popup/views/Login'
-
 const routes = [
-    { path: '/login', component: Login },
-    { path: '/', component: Home },
+    { path: '/', component: () => import('./views/Home') },
+    { path: '/login', component: () => import('./views/Login') },
+    { path: '/chart', component: () => import('./views/Chart') },
 ]
 
 export default routes

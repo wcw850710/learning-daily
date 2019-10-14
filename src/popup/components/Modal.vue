@@ -41,7 +41,7 @@ export default {
 }
 </script>
 <style lang="sass" scoped>
-@import './style'
+@import './style/modal'
 .fade-enter-active, .fade-leave-active
     transition: opacity .5s
 .fade-enter, .fade-leave-to

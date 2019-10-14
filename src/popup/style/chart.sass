@@ -1,0 +1,82 @@
+@import '../style/var'
+
+=wrapper
+    width: calc(100% - 30px)
+    margin: 0 auto
+
+.root
+    width: 100%
+
+.go-home
+    cursor: pointer
+    transition: 0.6s ease
+    &:hover
+        opacity: 0.7
+    &__icon
+        margin-right: 6px
+
+.control
+    display: flex
+    justify-content: space-between
+    padding: 10px 0
+    +wrapper
+    &__score
+        width: 45%
+        padding: 12px 6px
+        border-radius: 10px
+        background: $green-light
+        border: 1px solid $green
+        text-align: center
+        &__big
+            font-size: 36px
+            color: $green
+            font-weight: 900
+        &__badge
+            font-size: 14px
+            color: $orange
+            font-weight: 900
+            margin-left: 9px
+    &__selects
+        width: 52%
+        display: flex
+        flex-wrap: wrap
+        align-content: space-between
+
+.tip
+    display: flex
+    justify-content: space-between
+    font-size: 12px
+    border-bottom: 1px solid $green
+    padding-bottom: 20px
+    +wrapper
+    &__score
+        width: 45%
+    &__selects
+        width: 52%
+        position: relative
+        padding-left: 27px
+        &__badge
+            position: absolute
+            left: 0
+            top: 50%
+            transform: translateY(-50%)
+            background: $green-light
+            color: $green
+            border-radius: 100%
+            width: 21px
+            height: 21px
+            display: inline-flex
+            align-items: center
+            justify-content: center
+        &__text
+            display: inline-block
+
+.chart
+    font-size: 13px
+    color: $gray-txt
+    text-align: center
+    padding: 30px 0 60px
+    +wrapper
+    img
+        display: block
+        margin: 0 auto 10px

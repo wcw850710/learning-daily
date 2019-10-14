@@ -24,11 +24,18 @@ function formatDate(time = new Date()) {
     return formatDate
 }
 
+function formatMonth(time = new Date()) {
+    const year = time.getFullYear()
+    const month = String(time.getMonth() + 1).padStart(2, '0')
+    const formatDate = `${year}-${month}`
+    return formatDate
+}
+
 function tipNums() {
     chrome.storage.local.get(['id'], result => {
         const id = result.id
         dbRef(id)
-            .where('dates', 'array-contains', formatDate())
+            .where(formatDate(), '==', true)
             .onSnapshot(querySnapshot => {
                 let length = 0
                 querySnapshot.forEach(doc => {

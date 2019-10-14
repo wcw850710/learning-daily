@@ -1,0 +1,44 @@
+@import '../style/var'
+.root
+    width: 100%
+.header
+    width: 100%
+    background: $green
+    color: $w
+    height: 42px
+    font-size: 16px
+    font-weight: 900
+    display: flex
+    align-items: center
+    justify-content: space-between
+    padding: 0 21px
+    &__logout
+        cursor: pointer
+        transition: 0.6s ease
+        &:hover
+            opacity: 0.7
+    &__question
+        font-size: 12px
+        background: $w
+        color: $green
+        display: flex
+        align-items: center
+        justify-content: center
+        border-radius: 100%
+        width: 20px
+        height: 20px
+        cursor: pointer
+        transition: 0.6s ease
+        &:hover
+            color: $w
+            background: $green
+
+.fighting-word
+    color: $green
+    background: $green-light
+    padding: 10px 21px
+    width: 100%
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+    font-size: 14px

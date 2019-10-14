@@ -3,14 +3,7 @@
         class="main"
         ref="mainRef"
     >
-        <header class="header">
-            <div class="header__title">每天學一點</div>
-            <div
-                class="header__logout"
-                @click="logout"
-            ><i class="fas fa-sign-out-alt"></i></div>
-        </header>
-        <section class="fighting-word">{{fightingWord ? fightingWord : '每天學一點，成功近一點。'}}</section>
+        <Header>{{fightingWord ? fightingWord : '每天學一點，成功近一點。'}}</Header>
         <section
             class="dates-banner"
             @wheel="wheelChangeDayCurrent($event)"
@@ -109,7 +102,10 @@
                     選單
                 </span>
                 <div class="footer__list__btn-main__modal">
-                    <div class="footer__list__btn-main__modal__list footer__list__btn-main__modal__list-question"><i class="footer__list__btn-main__modal__list__icon fas fa-chart-bar"></i><span class="footer__list__btn-main__modal__list__name">數據</span></div>
+                    <div
+                        class="footer__list__btn-main__modal__list footer__list__btn-main__modal__list-question"
+                        @click="goToChart"
+                    ><i class="footer__list__btn-main__modal__list__icon fas fa-chart-bar"></i><span class="footer__list__btn-main__modal__list__name">數據</span></div>
                     <div class="footer__list__btn-main__modal__list footer__list__btn-main__modal__list-question"><i class="footer__list__btn-main__modal__list__icon fas fa-question-circle"></i><span class="footer__list__btn-main__modal__list__name">說明</span></div>
                 </div>
             </div>
@@ -159,6 +155,7 @@
 </template>
 
 <script>
+import Header from '../components/Header'
 import Fragment from '../components/Fragment'
 import Modal from '../components/Modal'
 
@@ -182,13 +179,9 @@ export default {
     components: {
         Fragment,
         Modal,
+        Header,
     },
     methods: {
-        logout() {
-            chrome.storage.local.remove(['userId'], result => {
-                this.$router.push('/login')
-            })
-        },
         increaseDayCurrent() {
             if (!this.isChangeDate) return
             if (this.dayCurrent + 1 > 6) {
@@ -243,7 +236,14 @@ export default {
                         .get()
                         .then(querySnapshot => {
                             if (!querySnapshot.empty) {
-                                this.isImportant = true
+                                querySnapshot.forEach(doc => {
+                                    const data = doc.data()
+                                    if (data.lines) {
+                                        if (data.lines.length) {
+                                            this.isImportant = true
+                                        }
+                                    }
+                                })
                             }
                         })
                 },
@@ -302,12 +302,12 @@ export default {
                     if (url) {
                         const day = 86400000
                         const pushData = {
+                            createTime: new Date(),
                             dates: [],
                             isChecked: false,
                             name: this.createListName,
                             url,
                         }
-                        let dates = []
                         for (
                             let i = 0, length = this.times.length;
                             i < length;
@@ -317,9 +317,8 @@ export default {
                             const formatDate = this.formatDate(
                                 new Date(new Date().getTime() + day * time),
                             )
-                            dates.push(formatDate)
+                            pushData.dates.push(formatDate)
                         }
-                        pushData.dates = dates
                         this.db
                             .where('url', '==', url)
                             .get()
@@ -405,6 +404,9 @@ export default {
             chrome.tabs.executeScript(null, {
                 file: './cs-penShow.js',
             })
+        },
+        goToChart() {
+            this.$router.push('/chart')
         },
     },
     computed: {
