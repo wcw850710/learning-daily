@@ -2,7 +2,11 @@
     <main class="main">
         <header class="header">
             <div class="header__title">每天學一點</div>
-            <div class="header__question"><i class="fas fa-question"></i></div>
+            <div
+                class="header__logout"
+                @click="logout"
+            ><i class="fas fa-sign-out-alt"></i></div>
+            <!-- <div class="header__question"><i class="fas fa-question"></i></div> -->
         </header>
         <section class="fighting-word">{{fightingWord ? fightingWord : '每天學一點，成功近一點。'}}</section>
         <section
@@ -162,6 +166,11 @@ export default {
         Modal,
     },
     methods: {
+        logout() {
+            chrome.storage.local.remove(['username'], result => {
+                this.$router.push('/login')
+            })
+        },
         increaseDayCurrent() {
             if (this.dayCurrent + 1 > 6) {
                 return
