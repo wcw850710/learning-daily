@@ -210,8 +210,10 @@
                         display: flex
                         align-items: center
                         justify-content: center
-                        &:not(:last-child)
-                            margin-bottom: 9px
+                        padding: 6px 12px
+                        transition: .6s ease
+                        &:hover
+                            background: $green-light
                         &__icon
                             margin-right: 5px
                         &__name
@@ -224,7 +226,7 @@
                             left: 50%
                             top: -15px
                             transform: translate(-50%, -100%)
-                            padding: 12px
+                            padding: 6px 0
                             min-width: 90px
                             background: $w
                             filter: drop-shadow(0 5px 10px rgba($green, .5))
@@ -240,25 +242,21 @@
                                 left: 50%
                                 bottom: 0
                                 transform: translate(-50%, 100%)
-        &__nums
-            background: $orange
-            font-size: 12px
-            color: $w
-            display: flex
-            align-items: center
-            justify-content: center
-            border-radius: 50%
-            width: 16px
-            height: 16px
-            position: absolute
-            right: 0
-            top: -3px
-            font-style: normal
         &__text
             color: $green
             font-size: 12px
             text-align: center
             transform: scale(.9)
+        &--important
+            .footer__list__btn
+                border-color: $orange
+                color: $orange
+            .footer__list__text
+                color: $orange
+            &:hover
+                .footer__list__btn
+                    background: $orange
+                    box-shadow: 0 0 15px rgba($orange, .8)
 
 .create-modal
     &__title

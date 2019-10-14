@@ -1,5 +1,8 @@
 <template>
-    <main class="main">
+    <main
+        class="main"
+        ref="mainRef"
+    >
         <header class="header">
             <div class="header__title">每天學一點</div>
             <div
@@ -76,17 +79,16 @@
                     重點 (q)
                 </span>
             </div>
-            <div class="footer__list">
+            <div
+                class="footer__list"
+                :class="{'footer__list--important': isImportant}"
+            >
                 <button
                     class="footer__list__btn footer__list__btn-eye"
                     :class="{'footer__list__btn-eye--show': isShowPen}"
                     @click="togglePen"
                 ><i class="fas fa-eye"></i>
                 </button>
-                <i
-                    class="footer__list__nums"
-                    v-if="showNums"
-                >{{showNums}}</i>
                 <span class="footer__list__text">
                     顯示 (w)
                 </span>
@@ -171,8 +173,8 @@ export default {
             times: [0, 1, 3, 6, 14, 29, 89],
             isShowDescription: false,
             isShowPen: false,
-            showNums: 0,
             isChangeDate: true,
+            isImportant: false,
             // add用
             createListName: '',
         }
@@ -241,10 +243,7 @@ export default {
                         .get()
                         .then(querySnapshot => {
                             if (!querySnapshot.empty) {
-                                querySnapshot.forEach(doc => {
-                                    const { lines } = doc.data()
-                                    this.showNums = lines.length
-                                })
+                                this.isImportant = true
                             }
                         })
                 },
@@ -331,13 +330,20 @@ export default {
                                         .then(() => this.fetchLists())
                                 } else {
                                     querySnapshot.forEach(doc => {
+                                        const { dates } = doc.data()
                                         const id = doc.id
+                                        if (dates.length)
+                                            return this.$my.alert(
+                                                this.$refs.mainRef,
+                                                '此連結已經創建',
+                                            )
                                         this.db
                                             .doc(id)
                                             .update(pushData)
                                             .then(() => this.fetchLists())
                                     })
                                 }
+                                this.createListName = ''
                                 this.hideCreateModal()
                             })
                     }

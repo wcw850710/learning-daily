@@ -17,7 +17,7 @@
                     top: ${current.y}px;
                     transform: translateX(${current.translateX}px);
                     cursor: pointer;
-                    z-index: 10000;
+                    z-index: 100;
                 `
                 line.addEventListener(`dblclick`, () => {
                     const { width, left, top } = line.style

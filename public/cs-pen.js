@@ -20,7 +20,7 @@
         background: red;
         border-radius: 50%;
         position: fixed;
-        z-index: 10000;
+        z-index: 100;
     `
     canvas.style.cssText = `
                         width: 100%;
@@ -28,7 +28,7 @@
                         position: absolute;
                         left: 0;
                         top: 0;
-                        z-index: 10000;
+                        z-index: 100;
                         cursor: none;
                     `
     line.className = 'my-important-pen'
@@ -79,7 +79,7 @@
             ...document.body.getElementsByClassName('my-important-pen'),
         ]
         if (pens.length) {
-            cloneLine.style.zIndex = '10000'
+            cloneLine.style.zIndex = '100'
             cloneLine.style.cursor = 'pointer'
             line.addEventListener(`dblclick`, () => {
                 const { width, left, top } = cloneLine.style
