@@ -205,16 +205,15 @@ export default {
         },
         fetchWebs() {
             this.$db.ref(`/${this.username}/webs`).on('value', snapshot => {
-                const data = snapshot.val()
                 this.webs = []
-                for (let uuid in data) {
-                    const web = data[uuid]
+                snapshot.forEach(item => {
+                    const web = item.val()
                     this.webs.push({
                         url: web.url,
                         length: Object.keys(web.lines).length,
                         width: web.width || 1920,
                     })
-                }
+                })
             })
         },
         fetchLists() {
@@ -236,17 +235,18 @@ export default {
                             ),
                         )
                         .on('value', snapshot => {
-                            const data = snapshot.val()
                             this.lists = []
-                            for (let key in data) {
-                                const length = this.webs.find(
-                                    web => web.url === data[key].url,
-                                ).length
+                            snapshot.forEach(item => {
+                                const val = item.val()
+                                const findWeb = this.webs.find(
+                                    web => web.url === val.url,
+                                )
+                                const length = findWeb ? findWeb.length : 0
                                 this.lists.push({
-                                    ...data[key],
+                                    ...val,
                                     length,
                                 })
-                            }
+                            })
                         })
                 },
             )
@@ -311,24 +311,24 @@ export default {
                             .orderByChild('url')
                             .equalTo(url)
                             .once('value', snapshot => {
-                                const data = snapshot.val()
-                                for (let uuid in data) {
+                                snapshot.forEach(item => {
+                                    const key = item.key
                                     this.$db
-                                        .ref(this.refLists + `/${uuid}`)
+                                        .ref(this.refLists + `/${key}`)
                                         .remove()
-                                }
+                                })
                             })
                         this.$db
                             .ref(`${this.username}/webs`)
                             .orderByChild('url')
                             .equalTo(url)
                             .once('value', snapshot => {
-                                const data = snapshot.val()
-                                for (let uuid in data) {
+                                snapshot.forEach(item => {
+                                    const key = item.key
                                     this.$db
-                                        .ref(`${this.username}/webs/${uuid}`)
+                                        .ref(`${this.username}/webs/${key}`)
                                         .remove()
-                                }
+                                })
                             })
                     }
                 },
@@ -339,10 +339,12 @@ export default {
             chrome.tabs.query({ currentWindow: true, active: true }, tab => {
                 const createData = { url }
                 const findWeb = this.webs.find(web => web.url === url)
-                if (window.screen.width === findWeb.width) {
-                    createData.state = 'maximized'
-                } else {
-                    createData.width = findWeb.width + 16
+                if (findWeb) {
+                    if (window.screen.width === findWeb.width) {
+                        createData.state = 'maximized'
+                    } else {
+                        createData.width = findWeb.width + 16
+                    }
                 }
                 chrome.windows.create(createData)
 
@@ -351,19 +353,18 @@ export default {
                     .orderByChild('date')
                     .equalTo(date)
                     .once('value', snapshot => {
-                        const data = snapshot.val()
-
-                        for (let uuid in data) {
-                            if (data[uuid].isChecked) {
-                                break
+                        snapshot.forEach(item => {
+                            const val = item.val()
+                            const key = item.key
+                            if (val.isChecked) {
+                                return
                             }
-                            if (data[uuid].url === url) {
+                            if (val.url === url) {
                                 this.$db
-                                    .ref(this.refLists + `/${uuid}/isChecked`)
-                                    .update({ ...data[uuid], isChecked: true })
-                                break
+                                    .ref(this.refLists + `/${key}/isChecked`)
+                                    .update({ ...val, isChecked: true })
                             }
-                        }
+                        })
                     })
             })
         },

@@ -2,11 +2,10 @@
     const pens = [...document.body.getElementsByClassName('my-important-pen')]
     if (!pens.length) {
         const fragment = document.createDocumentFragment()
-        chrome.runtime.sendMessage({ mode: 'toggleLines' }, res => {
-            const data = res.lines
-            for (let uuid in data) {
+        chrome.runtime.sendMessage({ mode: 'toggleLines' }, lines => {
+            for (let key in lines) {
                 const line = document.createElement(`i`)
-                const current = data[uuid]
+                const current = lines[key]
                 line.className = 'my-important-pen'
                 line.style.cssText = `
                     width: ${current.width}px;

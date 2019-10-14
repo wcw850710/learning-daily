@@ -31,13 +31,13 @@ function tipNums() {
             .equalTo(formatDate(new Date()))
             .on('value', snapshot => {
                 if (snapshot.exists()) {
-                    const data = snapshot.val()
                     let length = 0
-                    for (let uuid in data) {
-                        if (!data[uuid].isChecked) {
+                    snapshot.forEach(item => {
+                        const val = item.val()
+                        if (!val.isChecked) {
                             length++
                         }
-                    }
+                    })
                     if (length === 0) {
                         length = ''
                     } else {
@@ -65,19 +65,19 @@ function pushLinesFetchData(url, lineData, width) {
             .orderByChild('url')
             .equalTo(url)
             .once('value', snapshot => {
-                const data = snapshot.val()
-                const pushRefData = uuid =>
-                    db.ref(`${username}/webs/${uuid}/lines`).push(lineData)
-                if (!data) {
+                const pushRefData = key =>
+                    db.ref(`${username}/webs/${key}/lines`).push(lineData)
+                if (!snapshot.exists()) {
                     db.ref(`${username}/webs`)
                         .push({ url, width })
-                        .then(({ key: uuid }) => {
-                            pushRefData(uuid)
+                        .then(({ key }) => {
+                            pushRefData(key)
                         })
                 } else {
-                    for (let uuid in data) {
-                        pushRefData(uuid)
-                    }
+                    snapshot.forEach(item => {
+                        const key = item.key
+                        pushRefData(key)
+                    })
                 }
             })
     })
@@ -90,24 +90,28 @@ function removeLinesFetchData(url, lineData, sendRes) {
             .orderByChild('url')
             .equalTo(url)
             .once('value', snapshot => {
-                const data = snapshot.val()
-                const key = Object.keys(data)[0]
-                db.ref(`${username}/webs/${key}/lines`)
-                    .orderByChild('width')
-                    .equalTo(lineData.width)
-                    .once('value', snapshot => {
-                        const data = snapshot.val()
-                        for (let uuid in data) {
-                            if (
-                                data[uuid].x === lineData.x &&
-                                data[uuid].y === lineData.y
-                            ) {
-                                db.ref(`${username}/webs/${key}/lines/${uuid}`)
-                                    .remove()
-                                    .then(() => sendRes(true))
-                            }
-                        }
-                    })
+                snapshot.forEach(item => {
+                    const key = item.key
+                    db.ref(`${username}/webs/${key}/lines`)
+                        .orderByChild('width')
+                        .equalTo(lineData.width)
+                        .once('value', snapshot => {
+                            snapshot.forEach(item => {
+                                const val = item.val()
+                                const key = item.key
+                                if (
+                                    val.x === lineData.x &&
+                                    val.y === lineData.y
+                                ) {
+                                    db.ref(
+                                        `${username}/webs/${key}/lines/${key}`,
+                                    )
+                                        .remove()
+                                        .then(() => sendRes(true))
+                                }
+                            })
+                        })
+                })
             })
     })
 }
@@ -119,9 +123,11 @@ function toggleLinesFetchData(url, sendRes) {
             .orderByChild('url')
             .equalTo(url)
             .once('value', snapshot => {
-                const data = snapshot.val()
-                if (data) {
-                    sendRes(data[Object.keys(data)[0]])
+                if (snapshot.exists()) {
+                    snapshot.forEach(item => {
+                        const val = item.val()
+                        sendRes(val.lines)
+                    })
                 } else {
                     alert('此連結尚未有筆記')
                 }
