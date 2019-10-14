@@ -12,7 +12,7 @@
     "browser_action": {
         "default_popup": "popup.html"
     },
-    "content_security_policy": "script-src 'self' 'unsafe-eval' https://www.gstatic.com/firebasejs/7.1.0/firebase-app.js https://www.gstatic.com/firebasejs/7.1.0/firebase-auth.js https://www.gstatic.com/firebasejs/7.1.0/firebase-database.js; object-src 'self'",
+    "content_security_policy": "script-src 'self' 'unsafe-eval' https://www.gstatic.com/firebasejs/7.2.0/firebase-app.js https://www.gstatic.com/firebasejs/7.2.0/firebase-firestore.js; object-src 'self'",
     "background": {
         "page": "bg.html",
         "persistent": true

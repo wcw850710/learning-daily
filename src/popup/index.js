@@ -5,10 +5,15 @@ import AppComponent from './App/App.vue'
 import '@/assets/fontawesome/css/all.min.css'
 import '@/assets/libs/style.sass'
 import * as myFuncs from '@/assets/libs/my'
+import firebase from 'firebase/app'
+import 'firebase/firestore'
 
 const bg = chrome.extension.getBackgroundPage()
+const app = firebase.initializeApp(bg.dbConfig())
+const db = app.firestore()
+
 Vue.prototype.$bg = bg
-Vue.prototype.$db = bg.$db()
+Vue.prototype.$db = db
 Vue.prototype.$my = myFuncs.default
 
 Vue.component('app-component', AppComponent)

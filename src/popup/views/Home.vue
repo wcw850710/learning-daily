@@ -36,7 +36,7 @@
         </section>
         <section
             class="content"
-            v-if="filterLists().length"
+            v-if="lists.length"
         >
             <div class="content__table content__header">
                 <ul class="content__table__tr content__header__tr">
@@ -47,7 +47,7 @@
             </div>
             <div class="content__table content__body">
                 <Fragment
-                    v-for="(list, index) in filterLists()"
+                    v-for="(list, index) in lists"
                     :key="index"
                 >
                     <ul
@@ -150,10 +150,9 @@ export default {
     data() {
         return {
             lists: [],
-            username: '',
+            userId: '',
             fightingWord: '',
             dayCurrent: 3,
-            webs: [],
             times: [0, 1, 3, 6, 14, 29, 89],
             isShowDescription: false,
             isShowPen: false,
@@ -167,7 +166,7 @@ export default {
     },
     methods: {
         logout() {
-            chrome.storage.local.remove(['username'], result => {
+            chrome.storage.local.remove(['userId'], result => {
                 this.$router.push('/login')
             })
         },
@@ -212,59 +211,34 @@ export default {
         formatDate(time) {
             return this.$bg.formatDate(time)
         },
-        fetchWebs() {
-            this.$db.ref(`/${this.username}/webs`).on('value', snapshot => {
-                this.webs = []
-                snapshot.forEach(item => {
-                    const web = item.val()
-                    this.webs.push({
-                        url: web.url,
-                        length: Object.keys(web.lines).length,
-                        width: web.width || 1920,
-                    })
-                })
-            })
-        },
         fetchLists() {
             chrome.tabs.query(
                 { active: true, lastFocusedWindow: true },
                 tabs => {
-                    const day = 86400000
-                    this.$db
-                        .ref(this.refLists)
-                        .orderByChild('date')
-                        .startAt(
-                            this.formatDate(
-                                new Date(new Date().getTime() - day * 3),
-                            ),
-                        )
-                        .endAt(
-                            this.formatDate(
-                                new Date(new Date().getTime() + day * 3),
-                            ),
-                        )
-                        .on('value', snapshot => {
-                            this.lists = []
-                            snapshot.forEach(item => {
-                                const val = item.val()
-                                const findWeb = this.webs.find(
-                                    web => web.url === val.url,
-                                )
-                                const length = findWeb ? findWeb.length : 0
+                    const currentDay = this.recentSevenDays[this.dayCurrent]
+                    this.lists = []
+                    this.db
+                        .where('dates', 'array-contains', currentDay)
+                        .get()
+                        .then(querySnapshot => {
+                            querySnapshot.forEach(doc => {
+                                const {
+                                    isChecked,
+                                    url,
+                                    name,
+                                    lines,
+                                } = doc.data()
                                 this.lists.push({
-                                    ...val,
-                                    length,
+                                    name,
+                                    url,
+                                    isChecked,
+                                    uuid: doc.id,
+                                    length: lines ? lines.length : 0,
                                 })
                             })
                         })
                 },
             )
-        },
-        filterLists() {
-            const filterLists = this.lists.filter(
-                list => list.date === this.recentSevenDays[this.dayCurrent],
-            )
-            return filterLists
         },
         showCreateModal() {
             const ref = this.$refs.createModalRef
@@ -287,6 +261,13 @@ export default {
                     const url = tabs[0].url
                     if (url) {
                         const day = 86400000
+                        const pushData = {
+                            dates: [],
+                            isChecked: false,
+                            name: this.createListName,
+                            url,
+                        }
+                        let dates = []
                         for (
                             let i = 0, length = this.times.length;
                             i < length;
@@ -296,14 +277,10 @@ export default {
                             const formatDate = this.formatDate(
                                 new Date(new Date().getTime() + day * time),
                             )
-                            const pushData = {
-                                url,
-                                date: formatDate,
-                                name: this.createListName,
-                                isChecked: false,
-                            }
-                            this.$db.ref(this.refLists).push(pushData)
+                            dates.push(formatDate)
                         }
+                        pushData.dates = dates
+                        this.db.add(pushData)
                         this.hideCreateModal()
                     }
                 },
@@ -315,66 +292,31 @@ export default {
                 tabs => {
                     const url = tabs[0].url
                     if (url) {
-                        this.$db
-                            .ref(this.refLists)
-                            .orderByChild('url')
-                            .equalTo(url)
-                            .once('value', snapshot => {
-                                snapshot.forEach(item => {
-                                    const key = item.key
-                                    this.$db
-                                        .ref(this.refLists + `/${key}`)
-                                        .remove()
-                                })
-                            })
-                        this.$db
-                            .ref(`${this.username}/webs`)
-                            .orderByChild('url')
-                            .equalTo(url)
-                            .once('value', snapshot => {
-                                snapshot.forEach(item => {
-                                    const key = item.key
-                                    this.$db
-                                        .ref(`${this.username}/webs/${key}`)
-                                        .remove()
-                                })
-                            })
+                        const uuid = this.lists.find(list => list.url === url)
+                            .uuid
+                        this.db
+                            .doc(uuid)
+                            .delete()
+                            .then(() => this.fetchLists())
                     }
                 },
             )
         },
         urlCreate(list) {
-            const { url, date, isChecked } = list
+            const { url, date, isChecked, width, uuid } = list
             chrome.tabs.query({ currentWindow: true, active: true }, tab => {
                 const createData = { url }
-                const findWeb = this.webs.find(web => web.url === url)
-                if (findWeb) {
-                    if (window.screen.width === findWeb.width) {
-                        createData.state = 'maximized'
-                    } else {
-                        createData.width = findWeb.width + 16
-                    }
+                if (window.screen.width === width || !width) {
+                    createData.state = 'maximized'
+                } else {
+                    createData.width = width + 16
                 }
                 chrome.windows.create(createData)
 
-                this.$db
-                    .ref(this.refLists)
-                    .orderByChild('date')
-                    .equalTo(date)
-                    .once('value', snapshot => {
-                        snapshot.forEach(item => {
-                            const val = item.val()
-                            const key = item.key
-                            if (val.isChecked) {
-                                return
-                            }
-                            if (val.url === url) {
-                                this.$db
-                                    .ref(this.refLists + `/${key}/isChecked`)
-                                    .update({ ...val, isChecked: true })
-                            }
-                        })
-                    })
+                this.db
+                    .doc(uuid)
+                    .update({ isChecked: true })
+                    .then(() => this.fetchLists())
             })
         },
         keydownToDraw(ev) {
@@ -412,17 +354,22 @@ export default {
             }
             return days
         },
-        refLists() {
-            return `/${this.username}/lists`
+        db() {
+            return this.$db
+                .collection('USERS')
+                .doc(this.userId)
+                .collection('LISTS')
+        },
+    },
+    watch: {
+        dayCurrent() {
+            return this.fetchLists()
         },
     },
     created() {
-        chrome.storage.local.get(['username'], result => {
-            this.username = result.username
-            new Promise(reslove => {
-                this.fetchWebs()
-                reslove()
-            }).then(res => this.fetchLists())
+        chrome.storage.local.get(['id'], result => {
+            this.userId = result.id
+            this.fetchLists()
         })
         chrome.storage.local.get(['fightingWord'], result => {
             this.fightingWord = result.fightingWord

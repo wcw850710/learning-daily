@@ -6,9 +6,14 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig)
 const db = app.firestore()
+const dbRef = username =>
+    db
+        .collection('USERS')
+        .doc(username)
+        .collection('LISTS')
 
-function $db() {
-    return db
+function dbConfig() {
+    return firebaseConfig
 }
 
 function formatDate(time = new Date()) {
