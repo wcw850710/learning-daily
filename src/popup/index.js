@@ -22,9 +22,9 @@ const router = new VueRouter({
     routes,
 })
 router.beforeEach((to, from, next) => {
-    chrome.storage.local.get(['username'], result => {
-        let username = result.username
-        if (!username && to.path !== '/login') {
+    chrome.storage.local.get(['id'], result => {
+        let id = result.id
+        if (!id && to.path !== '/login') {
             next('/login')
         } else {
             next()

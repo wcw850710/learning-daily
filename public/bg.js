@@ -6,10 +6,10 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig)
 const db = app.firestore()
-const dbRef = username =>
+const dbRef = userId =>
     db
         .collection('USERS')
-        .doc(username)
+        .doc(userId)
         .collection('LISTS')
 
 function dbConfig() {
@@ -25,27 +25,21 @@ function formatDate(time = new Date()) {
 }
 
 function tipNums() {
-    chrome.storage.local.get(['username'], result => {
-        const username = result.username
-        db.ref(`${username}/lists`)
-            .orderByChild('date')
-            .equalTo(formatDate(new Date()))
-            .on('value', snapshot => {
-                if (snapshot.exists()) {
-                    let length = 0
-                    snapshot.forEach(item => {
-                        const val = item.val()
-                        if (!val.isChecked) {
-                            length++
-                        }
-                    })
-                    if (length === 0) {
-                        length = ''
-                    } else {
-                        length = String(length)
+    chrome.storage.local.get(['id'], result => {
+        const id = result.id
+        dbRef(id)
+            .where('dates', 'array-contains', formatDate())
+            .onSnapshot(querySnapshot => {
+                let length = 0
+                querySnapshot.forEach(doc => {
+                    const { isChecked } = doc.data()
+                    if (!isChecked) {
+                        length++
                     }
+                })
+                if (length) {
                     chrome.browserAction.setBadgeText({
-                        text: length,
+                        text: String(length),
                     })
                     chrome.browserAction.setBadgeBackgroundColor({
                         color: '#FF663E',
@@ -59,79 +53,74 @@ function tipNums() {
     })
 }
 
-function pushLinesFetchData(url, lineData, width) {
-    chrome.storage.local.get(['username'], result => {
-        const username = result.username
-        db.ref(`${username}/webs`)
-            .orderByChild('url')
-            .equalTo(url)
-            .once('value', snapshot => {
-                const pushRefData = key =>
-                    db.ref(`${username}/webs/${key}/lines`).push(lineData)
-                if (!snapshot.exists()) {
-                    db.ref(`${username}/webs`)
-                        .push({ url, width })
-                        .then(({ key }) => {
-                            pushRefData(key)
-                        })
-                } else {
-                    snapshot.forEach(item => {
-                        const key = item.key
-                        pushRefData(key)
+function pushLinesFetchData(url, lineData, windowWidth) {
+    chrome.storage.local.get(['id'], result => {
+        const id = result.id
+        const db = dbRef(id)
+        db.where('url', '==', url)
+            .get()
+            .then(querySnapshot => {
+                if (querySnapshot.empty) {
+                    return db.add({
+                        width: windowWidth,
+                        lines: [lineData],
+                        url,
                     })
                 }
+                querySnapshot.forEach(doc => {
+                    const { width, lines } = doc.data()
+                    const id = doc.id
+                    if (!width) {
+                        db.doc(id).update({ width: windowWidth })
+                    }
+                    if (lines) {
+                        db.doc(id).update({ lines: [...lines, lineData] })
+                    } else {
+                        db.doc(id).update({ lines: [lineData] })
+                    }
+                })
             })
     })
 }
 
 function removeLinesFetchData(url, lineData, sendRes) {
-    chrome.storage.local.get(['username'], result => {
-        const username = result.username
-        db.ref(`${username}/webs`)
-            .orderByChild('url')
-            .equalTo(url)
-            .once('value', snapshot => {
-                snapshot.forEach(item => {
-                    const key = item.key
-                    db.ref(`${username}/webs/${key}/lines`)
-                        .orderByChild('width')
-                        .equalTo(lineData.width)
-                        .once('value', snapshot => {
-                            snapshot.forEach(item => {
-                                const val = item.val()
-                                const key = item.key
-                                if (
-                                    val.x === lineData.x &&
-                                    val.y === lineData.y
-                                ) {
-                                    db.ref(
-                                        `${username}/webs/${key}/lines/${key}`,
-                                    )
-                                        .remove()
-                                        .then(() => sendRes(true))
-                                }
-                            })
+    chrome.storage.local.get(['id'], result => {
+        const id = result.id
+        const db = dbRef(id)
+        db.where('url', '==', url)
+            .get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => {
+                    const { lines } = doc.data()
+                    const id = doc.id
+                    const index = lines.findIndex(
+                        line => line.x === lineData.x && line.y === lineData.y,
+                    )
+                    db.doc(id)
+                        .update({
+                            lines:
+                                lines.length === 1
+                                    ? null
+                                    : lines.splice(index, 1),
                         })
+                        .then(() => sendRes(true))
                 })
             })
     })
 }
 
 function toggleLinesFetchData(url, sendRes) {
-    chrome.storage.local.get(['username'], result => {
-        const username = result.username
-        db.ref(`${username}/webs`)
-            .orderByChild('url')
-            .equalTo(url)
-            .once('value', snapshot => {
-                if (snapshot.exists()) {
-                    snapshot.forEach(item => {
-                        const val = item.val()
-                        sendRes(val.lines)
-                    })
-                } else {
-                    alert('此連結尚未有筆記')
-                }
+    chrome.storage.local.get(['id'], result => {
+        const id = result.id
+        const db = dbRef(id)
+        db.where('url', '==', url)
+            .get()
+            .then(querySnapshot => {
+                if (querySnapshot.empty) return alert('此連結尚未有重點')
+                querySnapshot.forEach(doc => {
+                    const { lines } = doc.data()
+                    sendRes(lines)
+                })
             })
     })
 }

@@ -84,6 +84,10 @@
                     @click="togglePen"
                 ><i class="fas fa-eye"></i>
                 </button>
+                <i
+                    class="footer__list__nums"
+                    v-if="showNums"
+                >{{showNums}}</i>
                 <span class="footer__list__text">
                     顯示 (w)
                 </span>
@@ -156,6 +160,8 @@ export default {
             times: [0, 1, 3, 6, 14, 29, 89],
             isShowDescription: false,
             isShowPen: false,
+            showNums: 0,
+            isChangeDate: true,
             // add用
             createListName: '',
         }
@@ -171,12 +177,14 @@ export default {
             })
         },
         increaseDayCurrent() {
+            if (!this.isChangeDate) return
             if (this.dayCurrent + 1 > 6) {
                 return
             }
             this.dayCurrent++
         },
         minusDayCurrent() {
+            if (!this.isChangeDate) return
             if (this.dayCurrent - 1 < 0) {
                 return
             }
@@ -191,6 +199,7 @@ export default {
             }
         },
         changeDayCurrent(val) {
+            if (!this.isChangeDate) return
             const type = typeof val
             switch (type) {
                 case 'string':
@@ -211,7 +220,27 @@ export default {
         formatDate(time) {
             return this.$bg.formatDate(time)
         },
+        fetchImportantNums() {
+            chrome.tabs.query(
+                { active: true, lastFocusedWindow: true },
+                tabs => {
+                    const url = tabs[0].url
+                    this.db
+                        .where('url', '==', url)
+                        .get()
+                        .then(querySnapshot => {
+                            if (!querySnapshot.empty) {
+                                querySnapshot.forEach(doc => {
+                                    const { lines } = doc.data()
+                                    this.showNums = lines.length
+                                })
+                            }
+                        })
+                },
+            )
+        },
         fetchLists() {
+            this.isChangeDate = false
             chrome.tabs.query(
                 { active: true, lastFocusedWindow: true },
                 tabs => {
@@ -221,6 +250,7 @@ export default {
                         .where('dates', 'array-contains', currentDay)
                         .get()
                         .then(querySnapshot => {
+                            this.isChangeDate = true
                             querySnapshot.forEach(doc => {
                                 const {
                                     isChecked,
@@ -280,8 +310,25 @@ export default {
                             dates.push(formatDate)
                         }
                         pushData.dates = dates
-                        this.db.add(pushData)
-                        this.hideCreateModal()
+                        this.db
+                            .where('url', '==', url)
+                            .get()
+                            .then(querySnapshot => {
+                                if (querySnapshot.empty) {
+                                    this.db
+                                        .add(pushData)
+                                        .then(() => this.fetchLists())
+                                } else {
+                                    querySnapshot.forEach(doc => {
+                                        const id = doc.id
+                                        this.db
+                                            .doc(id)
+                                            .update(pushData)
+                                            .then(() => this.fetchLists())
+                                    })
+                                }
+                                this.hideCreateModal()
+                            })
                     }
                 },
             )
@@ -292,12 +339,17 @@ export default {
                 tabs => {
                     const url = tabs[0].url
                     if (url) {
-                        const uuid = this.lists.find(list => list.url === url)
-                            .uuid
                         this.db
-                            .doc(uuid)
-                            .delete()
-                            .then(() => this.fetchLists())
+                            .where('url', '==', url)
+                            .get()
+                            .then(querySnapshot => {
+                                querySnapshot.forEach(doc =>
+                                    this.db
+                                        .doc(doc.id)
+                                        .delete()
+                                        .then(() => this.fetchLists()),
+                                )
+                            })
                     }
                 },
             )
@@ -370,6 +422,7 @@ export default {
         chrome.storage.local.get(['id'], result => {
             this.userId = result.id
             this.fetchLists()
+            this.fetchImportantNums()
         })
         chrome.storage.local.get(['fightingWord'], result => {
             this.fightingWord = result.fightingWord
