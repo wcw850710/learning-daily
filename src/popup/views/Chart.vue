@@ -28,9 +28,12 @@
         </section>
         <section class="tip">
             <div class="tip__score">創立時間不重複單字數</div>
-            <div class="tip__selects">
-                <div class="tip__selects__badge">月</div>
-                <div class="tip__selects__text">- 2019 年 10 月</div>
+            <div
+                class="tip__selects"
+                v-if="currentTipBadge"
+            >
+                <div class="tip__selects__badge">{{currentTipBadge}}</div>
+                <div class="tip__selects__text">- {{currentTipText}}</div>
             </div>
         </section>
         <section class="chart">
@@ -71,6 +74,8 @@ export default {
             ],
             selectedDetailVal: -1,
             detailOptions: [],
+            currentTipBadge: '',
+            currentTipText: '',
         }
     },
     // props: {},
@@ -80,6 +85,12 @@ export default {
     },
     // computed: {},
     methods: {
+        formatMonth(date) {
+            return this.$bg.formatMonth(date)
+        },
+        formatDate(date) {
+            return this.$bg.formatDate(date)
+        },
         goToHome() {
             this.$router.push('/')
         },
@@ -98,14 +109,15 @@ export default {
                 ]
                 for (let i = 1; i < 13; i++) {
                     const text = `${year} 年 ${String(i).padStart(2, '0')} 月`
-                    const value = new Date(
-                        `${year}-${String(i).padStart(2, '0')}`,
-                    )
+                    const value = `${year}-${String(i).padStart(2, '0')}`
+
                     this.detailOptions.push({
                         text,
                         value,
                     })
                 }
+                this.selectedDetailVal = this.formatMonth(new Date())
+                this.currentTipBadge = '月'
             } else if (val === 'years') {
                 const year = new Date().getFullYear() - 1
                 this.selectedDetailVal = -1
@@ -118,15 +130,29 @@ export default {
                 ]
                 for (let i = 0; i < 3; i++) {
                     const text = `${year + i} 年`
-                    const value = new Date(String(year + i))
+                    const value = String(year + i)
                     this.detailOptions.push({
                         text,
                         value,
                     })
                 }
+                this.selectedDetailVal = String(new Date().getFullYear())
+                this.currentTipBadge = '年'
             } else {
                 this.selectedDetailVal = -1
                 this.detailOptions = []
+                this.currentTipBadge = '週'
+                this.currentTipText = '本周 7 天'
+            }
+        },
+        selectedDetailVal(val) {
+            if (val !== -1) {
+                const findOption = this.detailOptions.find(
+                    option => option.value === val,
+                )
+                if (findOption) {
+                    this.currentTipText = findOption.text
+                }
             }
         },
     },

@@ -39,8 +39,8 @@ function tipNums() {
             .onSnapshot(querySnapshot => {
                 let length = 0
                 querySnapshot.forEach(doc => {
-                    const { isChecked } = doc.data()
-                    if (!isChecked) {
+                    const data = doc.data()
+                    if (data[formatDate(new Date())] === 'unchecked') {
                         length++
                     }
                 })
@@ -65,15 +65,9 @@ function pushLinesFetchData(url, lineData, windowWidth) {
         const id = result.id
         const db = listsDb(id)
         db.where('url', '==', url)
+            .where('color', '==', $color)
             .get()
             .then(querySnapshot => {
-                if (querySnapshot.empty) {
-                    return db.add({
-                        width: windowWidth,
-                        lines: [lineData],
-                        url,
-                    })
-                }
                 querySnapshot.forEach(doc => {
                     const { width, lines } = doc.data()
                     const id = doc.id
@@ -99,11 +93,13 @@ function removeLinesFetchData(url, lineData, sendRes) {
             .then(querySnapshot => {
                 querySnapshot.forEach(doc => {
                     const { lines } = doc.data()
-                    const id = doc.id
                     const index = lines.findIndex(
                         line => line.x === lineData.x && line.y === lineData.y,
                     )
+                    if (index === -1) return
+
                     lines.splice(index, 1)
+                    const id = doc.id
                     const newLines = lines
                     db.doc(id)
                         .update({
@@ -123,10 +119,15 @@ function toggleLinesFetchData(url, sendRes) {
             .get()
             .then(querySnapshot => {
                 if (querySnapshot.empty) return alert('此連結尚未有重點')
+                const linesData = []
                 querySnapshot.forEach(doc => {
-                    const { lines } = doc.data()
-                    sendRes(lines)
+                    const { lines, color } = doc.data()
+                    if (lines)
+                        lines.forEach(line =>
+                            linesData.push({ ...line, color }),
+                        )
                 })
+                sendRes(linesData)
             })
     })
 }
@@ -164,6 +165,19 @@ chrome.commands.onCommand.addListener(async command => {
     )
     if (!isLogin) return alert('請先登入')
 
+    if (command === 'changeWindowWidth') {
+        return chrome.windows.getCurrent({}, window => {
+            const { id } = window
+            const settingObj = {}
+            if (screen.width === $width) {
+                settingObj.state = 'maximized'
+            } else {
+                settingObj.width = Number($width) + 16
+            }
+            chrome.windows.update(id, settingObj)
+        })
+    }
+
     const url = await new Promise((res, rej) =>
         chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
             const url = tabs[0].url
@@ -192,14 +206,6 @@ chrome.commands.onCommand.addListener(async command => {
                                 file: './cs-penToggle.js',
                             })
                             break
-                        case 'changeWindowWidth':
-                            chrome.windows.getCurrent({}, window => {
-                                const { id } = window
-                                chrome.windows.update(id, {
-                                    width: Number($width),
-                                })
-                            })
-                            break
                     }
                 } else {
                     return alert('此連結尚未新增')
@@ -208,6 +214,6 @@ chrome.commands.onCommand.addListener(async command => {
     })
 })
 
-var $color = '#ff0000'
+var $color = '#ff2828'
 var $firstLogin = true
 var $width = null

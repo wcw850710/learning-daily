@@ -10,7 +10,7 @@
                 line.style.cssText = `
                     width: ${current.width}px;
                     height: 3px;
-                    background-color: red;
+                    background-color: ${current.color};
                     border-radius: 10px;
                     position: absolute;
                     left: ${current.x}px;

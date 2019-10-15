@@ -47,12 +47,15 @@
                 >
                     <ul
                         class="content__table__tr content__body__tr"
-                        :class="{'content__body__tr--checked': list.isChecked}"
+                        :class="{'content__body__tr--checked': list[recentSevenDays[dayCurrent]] === 'checked'}"
                         @click="urlCreate(list)"
                     >
                         <li class="content__table__tr__td content__body__tr__td">{{index+1}}</li>
                         <li class="content__table__tr__td content__body__tr__td">{{list.name}}</li>
-                        <li class="content__table__tr__td content__body__tr__td"><b>{{list.length}}</b></li>
+                        <li class="content__table__tr__td content__body__tr__td"><b
+                                @click.stop="changeColor(list.color)"
+                                :style="{backgroundColor: list.color}"
+                            >{{list.length}}</b></li>
                     </ul>
                 </Fragment>
             </div>
@@ -177,7 +180,10 @@
             :canHide="false"
         >
             <template #title>首次登入</template>
-            <div class="first-login-modal__list">
+            <div
+                class="first-login-modal__list"
+                style="margin-top: -15px;"
+            >
                 <input
                     class="first-login-modal__list__input"
                     :class="{'first-login-modal__list__input--valid': firstWidth}"
@@ -209,10 +215,10 @@ export default {
     name: 'HelloWorld',
     data() {
         const colors = [
-            '#ff0000',
+            '#ff2828',
             '#00c306',
             '#0089ff',
-            'ff7a08',
+            '#ff7a08',
             '#9508ff',
             '#00dcdc',
             '#ff00a5',
@@ -324,9 +330,9 @@ export default {
                     .get()
                     .then(querySnapshot => {
                         if (!querySnapshot.empty) {
+                            this.hasWeb = true
                             querySnapshot.forEach(doc => {
                                 const data = doc.data()
-                                this.hasWeb = true
                                 if (data.lines) {
                                     if (data.lines.length) {
                                         this.isImportant = true
@@ -343,31 +349,25 @@ export default {
             this.isChangeDate = false
             this.tabsQuery(tabs => {
                 const currentDay = this.recentSevenDays[this.dayCurrent]
-                this.lists = []
                 this.listsDb
                     .where('dates', 'array-contains', currentDay)
                     .get()
                     .then(querySnapshot => {
                         this.isChangeDate = true
+                        let lists = []
                         querySnapshot.forEach(doc => {
-                            const {
-                                isChecked,
-                                url,
-                                name,
-                                lines,
-                                width,
-                                color,
-                            } = doc.data()
-                            this.lists.push({
-                                color,
-                                width,
-                                name,
-                                url,
-                                isChecked,
+                            const data = doc.data()
+                            lists.push({
+                                ...data,
                                 uuid: doc.id,
-                                length: lines ? lines.length : 0,
+                                length: data.lines ? data.lines.length : 0,
                             })
                         })
+                        const newLists = lists.sort(
+                            (a, b) =>
+                                a.createTime.seconds - b.createTime.seconds,
+                        )
+                        this.lists = newLists
                         this.fetchImportantNums()
                     })
             })
@@ -452,7 +452,6 @@ export default {
                     const pushData = {
                         createTime: new Date(),
                         dates: [],
-                        isChecked: false,
                         name: this.createListName,
                         url,
                     }
@@ -465,6 +464,7 @@ export default {
                         const formatDate = this.formatDate(
                             new Date(new Date().getTime() + day * time),
                         )
+                        pushData[formatDate] = 'unchecked'
                         pushData.dates.push(formatDate)
                     }
                     this.listsDb
@@ -527,7 +527,7 @@ export default {
             })
         },
         urlCreate(list) {
-            const { url, date, isChecked, width, uuid, color } = list
+            const { url, date, width, uuid, color } = list
             chrome.tabs.query({ currentWindow: true, active: true }, tab => {
                 const createData = { url }
                 if (window.screen.width === width || !width) {
@@ -538,9 +538,12 @@ export default {
                 chrome.windows.create(createData)
                 this.$bg.$color = color
 
+                const updateData = {}
+                updateData[this.recentSevenDays[this.dayCurrent]] = 'checked'
+
                 this.listsDb
                     .doc(uuid)
-                    .update({ isChecked: true })
+                    .update(updateData)
                     .then(() => this.fetchLists())
             })
         },
@@ -560,6 +563,9 @@ export default {
         },
         goToChart() {
             this.$router.push('/chart')
+        },
+        changeColor(color) {
+            this.$bg.$color = color
         },
     },
     computed: {
@@ -590,6 +596,7 @@ export default {
     },
     watch: {
         dayCurrent() {
+            this.lists = []
             return this.fetchLists()
         },
         createListIsNewColor(is) {
