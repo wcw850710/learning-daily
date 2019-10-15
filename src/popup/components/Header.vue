@@ -23,7 +23,10 @@ export default {
     // computed: {},
     methods: {
         logout() {
-            chrome.storage.local.remove(['userId'], result => {
+            chrome.storage.local.remove(['id'], result => {
+                this.$bg.$firstLogin = true
+                this.$bg.$width = null
+                chrome.storage.local.remove(['width'])
                 this.$router.push('/login')
             })
         },

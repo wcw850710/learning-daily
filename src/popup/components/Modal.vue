@@ -6,9 +6,12 @@
         >
             <div
                 class="modal__bk-screen"
-                @click="hide"
+                @click="bkScreenHide"
             ></div>
             <div class="modal__content">
+                <div class="modal__content__title">
+                    <slot name="title"></slot>
+                </div>
                 <slot></slot>
             </div>
         </div>
@@ -21,13 +24,19 @@ export default {
             isShow: false,
         }
     },
-    props: {},
+    props: {
+        canHide: { type: Boolean, default: true },
+    },
     components: {},
     computed: {},
     methods: {
         show(callback) {
             this.isShow = true
             callback()
+        },
+        bkScreenHide() {
+            if (!this.canHide) return
+            this.isShow = false
         },
         hide(callback) {
             this.isShow = false

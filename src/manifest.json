@@ -23,5 +23,25 @@
         "activeTab",
         "http://*/",
         "https://*/"
-    ]
+    ],
+    "commands": {
+        "pen": {
+            "suggested_key": {
+                "default": "Alt+Shift+Q"
+            },
+            "description": "畫重點"
+        },
+        "penToggle": {
+            "suggested_key": {
+                "default": "Alt+Shift+W"
+            },
+            "description": "顯示重點"
+        },
+        "changeWindowWidth": {
+            "suggested_key": {
+                "default": "Alt+Shift+D"
+            },
+            "description": "改變視窗寬度"
+        }
+    }
 }

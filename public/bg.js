@@ -6,7 +6,7 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig)
 const db = app.firestore()
-const dbRef = userId =>
+const listsDb = userId =>
     db
         .collection('USERS')
         .doc(userId)
@@ -34,7 +34,7 @@ function formatMonth(time = new Date()) {
 function tipNums() {
     chrome.storage.local.get(['id'], result => {
         const id = result.id
-        dbRef(id)
+        listsDb(id)
             .where('dates', 'array-contains', formatDate())
             .onSnapshot(querySnapshot => {
                 let length = 0
@@ -63,7 +63,7 @@ function tipNums() {
 function pushLinesFetchData(url, lineData, windowWidth) {
     chrome.storage.local.get(['id'], result => {
         const id = result.id
-        const db = dbRef(id)
+        const db = listsDb(id)
         db.where('url', '==', url)
             .get()
             .then(querySnapshot => {
@@ -93,7 +93,7 @@ function pushLinesFetchData(url, lineData, windowWidth) {
 function removeLinesFetchData(url, lineData, sendRes) {
     chrome.storage.local.get(['id'], result => {
         const id = result.id
-        const db = dbRef(id)
+        const db = listsDb(id)
         db.where('url', '==', url)
             .get()
             .then(querySnapshot => {
@@ -118,7 +118,7 @@ function removeLinesFetchData(url, lineData, sendRes) {
 function toggleLinesFetchData(url, sendRes) {
     chrome.storage.local.get(['id'], result => {
         const id = result.id
-        const db = dbRef(id)
+        const db = listsDb(id)
         db.where('url', '==', url)
             .get()
             .then(querySnapshot => {
@@ -135,6 +135,12 @@ chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
     const { mode, data, lineData, windowWidth } = req
     const url = sender.url
     switch (mode) {
+        case 'getColor':
+            sendRes($color)
+            break
+        case 'changeWindowWidth':
+            sendRes($width)
+            break
         case 'sendLine':
             pushLinesFetchData(url, data, windowWidth)
             break
@@ -147,3 +153,61 @@ chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
     }
     return true
 })
+
+chrome.commands.onCommand.addListener(async command => {
+    const isLogin = await new Promise((res, rej) =>
+        chrome.storage.local.get(['id'], result => {
+            const id = result.id
+            if (!id) res(false)
+            else res(true)
+        }),
+    )
+    if (!isLogin) return alert('請先登入')
+
+    const url = await new Promise((res, rej) =>
+        chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
+            const url = tabs[0].url
+            if (url) res(url)
+            else rej(false)
+        }),
+    )
+
+    if (!url) return alert('沒有連結')
+
+    chrome.storage.local.get(['id'], result => {
+        const id = result.id
+        listsDb(id)
+            .where('url', '==', url)
+            .get()
+            .then(querySnapshot => {
+                if (!querySnapshot.empty) {
+                    switch (command) {
+                        case 'pen':
+                            chrome.tabs.executeScript(null, {
+                                file: './cs-pen.js',
+                            })
+                            break
+                        case 'penToggle':
+                            chrome.tabs.executeScript(null, {
+                                file: './cs-penToggle.js',
+                            })
+                            break
+                        case 'changeWindowWidth':
+                            chrome.windows.getCurrent({}, window => {
+                                const { id } = window
+                                chrome.windows.update(id, {
+                                    width: Number($width),
+                                })
+                            })
+                            break
+                    }
+                } else {
+                    return alert('此連結尚未新增')
+                }
+            })
+    })
+})
+
+var $color = '#ff0000'
+var $firstLogin = true
+var $width = null

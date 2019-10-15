@@ -100,6 +100,7 @@ export default {
                                         username: this.username,
                                         password: this.hash(),
                                         fighting_word: this.fightingWord,
+                                        firstLogin: true,
                                     })
                                     .then(doc => {
                                         chromeStorageSet(doc.id)
@@ -121,7 +122,22 @@ export default {
                                         .update({
                                             fighting_word: this.fightingWord,
                                         })
-                                        .then(() => chromeStorageSet(doc.id))
+                                        .then(() => {
+                                            if (data.width) {
+                                                chrome.storage.local.set(
+                                                    {
+                                                        width:
+                                                            data.width || null,
+                                                    },
+                                                    () =>
+                                                        chromeStorageSet(
+                                                            doc.id,
+                                                        ),
+                                                )
+                                            } else {
+                                                chromeStorageSet(doc.id)
+                                            }
+                                        })
                                 }
                             })
                         }

@@ -40,8 +40,9 @@
             document.body.appendChild(fragment)
         })
     } else {
+        const fragment = document.createDocumentFragment()
         pens.forEach(pen => {
-            document.body.removeChild(pen)
+            fragment.appendChild(pen)
         })
     }
 })()

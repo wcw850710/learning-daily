@@ -131,6 +131,7 @@
         align-items: center
         cursor: pointer
         position: relative
+        min-width: 30px
         &:hover
             .footer__list__btn
                 color: $w
@@ -209,15 +210,32 @@
                 .footer__list__btn
                     background: $orange
                     box-shadow: 0 0 15px rgba($orange, .8)
+        &--noweb
+            .footer__list__btn
+                border-color: $gray-txt
+                color: $gray-txt
+            .footer__list__text
+                color: $gray-txt
+            &:hover
+                .footer__list__btn
+                    background: $gray-txt
+                    box-shadow: 0 0 15px rgba($gray-txt, .8)
 
-.create-modal
-    &__title
-        font-size: 16px
-        background: $green
-        color: $w
-        text-align: center
-        padding: 12px
-        margin-bottom: 30px
+=cubeAndText
+    &__cube
+        display: inline-block
+        vertical-align: middle
+        width: 12px
+        height: 12px
+        margin-right: 6px
+        background: $gray
+    &__text
+        display: inline-block
+        vertical-align: middle
+        font-size: 13px
+        color: $bk
+
+=modalStyle
     &__list
         width: 80%
         font-size: 15px
@@ -230,6 +248,7 @@
             top: 50%
             transform: translateY(-50%)
             transition: .6s ease
+            pointer-events: none
         &__input
             appearance: none
             width: 100%
@@ -242,9 +261,20 @@
             transition: .6s ease
             &:focus, &--valid
                 border-bottom-color: $green
-                + .create-modal__list__name
+                ~ .create-modal__list__name, ~ .first-login-modal__list__name
                     color: $green
                     top: calc(50% - 25px)
+        &__checkbox
+            vertical-align: middle
+        &__text
+            font-size: 12px
+            vertical-align: middle
+            &__color
+                display: inline-block
+                vertical-align: middle
+                width: 10px
+                height: 10px
+                margin: 0 2px
     &__btn
         width: 222px
         appearance: none
@@ -263,3 +293,13 @@
         &:hover
             background-color: $green-light
             color: $green
+.create-modal, .first-login-modal
+    +modalStyle
+.first-login-modal
+    &__list__name
+        &__tip
+            display: inline-block
+            padding-left: 4px
+            color: $green
+            font-size: 12px
+            vertical-align: baseline
