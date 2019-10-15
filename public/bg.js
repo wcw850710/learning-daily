@@ -35,7 +35,7 @@ function tipNums() {
     chrome.storage.local.get(['id'], result => {
         const id = result.id
         dbRef(id)
-            .where(formatDate(), '==', true)
+            .where('dates', 'array-contains', formatDate())
             .onSnapshot(querySnapshot => {
                 let length = 0
                 querySnapshot.forEach(doc => {
@@ -103,12 +103,11 @@ function removeLinesFetchData(url, lineData, sendRes) {
                     const index = lines.findIndex(
                         line => line.x === lineData.x && line.y === lineData.y,
                     )
+                    lines.splice(index, 1)
+                    const newLines = lines
                     db.doc(id)
                         .update({
-                            lines:
-                                lines.length === 1
-                                    ? null
-                                    : lines.splice(index, 1),
+                            lines: newLines,
                         })
                         .then(() => sendRes(true))
                 })

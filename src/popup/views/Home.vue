@@ -267,8 +267,10 @@ export default {
                                     url,
                                     name,
                                     lines,
+                                    width,
                                 } = doc.data()
                                 this.lists.push({
+                                    width,
                                     name,
                                     url,
                                     isChecked,
