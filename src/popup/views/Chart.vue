@@ -11,8 +11,7 @@
         </Header>
         <section class="control">
             <div class="control__score">
-                <strong class="control__score__big">309</strong>
-                <b class="control__score__badge">/ 1</b>
+                <strong class="control__score__big">{{padNums(pointNums)}}</strong>
             </div>
             <div class="control__selects">
                 <Select
@@ -74,8 +73,11 @@ export default {
             ],
             selectedDetailVal: -1,
             detailOptions: [],
+            pointNums: 0,
             currentTipBadge: '',
             currentTipText: '',
+            userId: '',
+            months: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
         }
     },
     // props: {},
@@ -83,7 +85,17 @@ export default {
         Header,
         Select,
     },
-    // computed: {},
+    computed: {
+        listsDb() {
+            return this.$db
+                .collection('USERS')
+                .doc(this.userId)
+                .collection('LISTS')
+        },
+        padNums() {
+            return nums => String(nums).padStart(3, '0')
+        },
+    },
     methods: {
         formatMonth(date) {
             return this.$bg.formatMonth(date)
@@ -93,6 +105,18 @@ export default {
         },
         goToHome() {
             this.$router.push('/')
+        },
+        countPointNums(querySnapshot) {
+            if (querySnapshot.empty) {
+                this.pointNums = 0
+            } else {
+                let nums = 0
+                querySnapshot.forEach(doc => {
+                    const { lines } = doc.data()
+                    nums += lines.length
+                })
+                this.pointNums = nums
+            }
         },
     },
     watch: {
@@ -109,14 +133,14 @@ export default {
                 ]
                 for (let i = 1; i < 13; i++) {
                     const text = `${year} 年 ${String(i).padStart(2, '0')} 月`
-                    const value = `${year}-${String(i).padStart(2, '0')}`
+                    const value = String(i)
 
                     this.detailOptions.push({
                         text,
                         value,
                     })
                 }
-                this.selectedDetailVal = this.formatMonth(new Date())
+                this.selectedDetailVal = String(new Date().getMonth() + 1)
                 this.currentTipBadge = '月'
             } else if (val === 'years') {
                 const year = new Date().getFullYear() - 1
@@ -143,6 +167,27 @@ export default {
                 this.detailOptions = []
                 this.currentTipBadge = '週'
                 this.currentTipText = '本周 7 天'
+                this.listsDb
+                    .where(
+                        'createTime',
+                        '>=',
+                        new Date(
+                            `${new Date().getFullYear()}-${new Date().getMonth() +
+                                1}-${new Date().getDate() -
+                                (new Date().getDay() - 1)} 00:00:00`,
+                        ),
+                    )
+                    .where(
+                        'createTime',
+                        '<=',
+                        new Date(
+                            `${new Date().getFullYear()}-${new Date().getMonth() +
+                                1}-${new Date().getDate() +
+                                (7 - new Date().getDay())} 23:59:59`,
+                        ),
+                    )
+                    .get()
+                    .then(this.countPointNums)
             }
         },
         selectedDetailVal(val) {
@@ -153,10 +198,50 @@ export default {
                 if (findOption) {
                     this.currentTipText = findOption.text
                 }
+                if (val.length < 3) {
+                    this.listsDb
+                        .where(
+                            'createTime',
+                            '>=',
+                            new Date(
+                                `${new Date().getFullYear()}-${val}-1 00:00:00`,
+                            ),
+                        )
+                        .where(
+                            'createTime',
+                            '<=',
+                            new Date(
+                                `${new Date().getFullYear()}-${val}-${
+                                    this.months[Number(val) - 1]
+                                } 23:59:59`,
+                            ),
+                        )
+                        .get()
+                        .then(this.countPointNums)
+                } else {
+                    this.listsDb
+                        .where(
+                            'createTime',
+                            '>=',
+                            new Date(`${val}-1-1 00:00:00`),
+                        )
+                        .where(
+                            'createTime',
+                            '<=',
+                            new Date(`${val}-12-31 23:59:59`),
+                        )
+                        .get()
+                        .then(this.countPointNums)
+                }
             }
         },
     },
-    // created() {},
+    created() {
+        chrome.storage.local.get('id', result => {
+            const { id } = result
+            this.userId = id
+        })
+    },
     // mounted() {},
     // beforeDestroy() {},
 }

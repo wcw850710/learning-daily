@@ -613,13 +613,13 @@ export default {
         },
     },
     created() {
-        chrome.storage.local.get(['id'], result => {
+        chrome.storage.local.get('id', result => {
             this.userId = result.id
             this.fetchCheckFirstLogin(() => {
                 this.fetchLists()
                 this.fetchImportantNums()
                 if (!this.$bg.$width) {
-                    chrome.storage.local.get(['width'], result => {
+                    chrome.storage.local.get('width', result => {
                         const width = result.width
                         this.currentWidth = result.width
                         this.$bg.$width = result.width
@@ -629,7 +629,7 @@ export default {
                 }
             })
         })
-        chrome.storage.local.get(['fightingWord'], result => {
+        chrome.storage.local.get('fightingWord', result => {
             this.fightingWord = result.fightingWord
         })
     },

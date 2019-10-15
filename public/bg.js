@@ -32,7 +32,7 @@ function formatMonth(time = new Date()) {
 }
 
 function tipNums() {
-    chrome.storage.local.get(['id'], result => {
+    chrome.storage.local.get('id', result => {
         const id = result.id
         listsDb(id)
             .where('dates', 'array-contains', formatDate())
@@ -61,7 +61,7 @@ function tipNums() {
 }
 
 function pushLinesFetchData(url, lineData, windowWidth) {
-    chrome.storage.local.get(['id'], result => {
+    chrome.storage.local.get('id', result => {
         const id = result.id
         const db = listsDb(id)
         db.where('url', '==', url)
@@ -85,7 +85,7 @@ function pushLinesFetchData(url, lineData, windowWidth) {
 }
 
 function removeLinesFetchData(url, lineData, sendRes) {
-    chrome.storage.local.get(['id'], result => {
+    chrome.storage.local.get('id', result => {
         const id = result.id
         const db = listsDb(id)
         db.where('url', '==', url)
@@ -112,7 +112,7 @@ function removeLinesFetchData(url, lineData, sendRes) {
 }
 
 function toggleLinesFetchData(url, sendRes) {
-    chrome.storage.local.get(['id'], result => {
+    chrome.storage.local.get('id', result => {
         const id = result.id
         const db = listsDb(id)
         db.where('url', '==', url)
@@ -157,7 +157,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
 
 chrome.commands.onCommand.addListener(async command => {
     const isLogin = await new Promise((res, rej) =>
-        chrome.storage.local.get(['id'], result => {
+        chrome.storage.local.get('id', result => {
             const id = result.id
             if (!id) res(false)
             else res(true)
@@ -188,7 +188,7 @@ chrome.commands.onCommand.addListener(async command => {
 
     if (!url) return alert('沒有連結')
 
-    chrome.storage.local.get(['id'], result => {
+    chrome.storage.local.get('id', result => {
         const id = result.id
         listsDb(id)
             .where('url', '==', url)
