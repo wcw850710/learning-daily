@@ -1,7 +1,7 @@
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const path = require('path')
 const UglifyJS = require('uglify-es')
-const htmlMinify = require('html-minifier').minify
+const htmlMinifier = require('html-minifier').minify
 
 // Generate pages object
 const pagesObj = {}
@@ -22,29 +22,35 @@ const plugins = [
         to: `${path.resolve('dist')}/manifest.json`,
     },
     {
-        from: path.resolve('src/bg/'),
-        to: `${path.resolve('dist')}/[name].[ext]`,
-        transform(content) {
-            return UglifyJS.minify(content.toString()).code
-        },
+        from: path.resolve('src/background/'),
+        to: `${path.resolve('dist')}/background/[name].[ext]`,
         ignore: ['*.html'],
     },
     {
-        from: path.resolve('src/bg/bg.html'),
-        to: `${path.resolve('dist')}/bg.html`,
+        from: path.resolve('src/background/index.html'),
+        to: `${path.resolve('dist')}/background/index.html`,
         transform(content) {
-            return htmlMinify(content.toString(), {
+            return htmlMinifier(content.toString(), {
                 removeAttributeQuotes: true,
                 collapseWhitespace: true,
-                minifyCSS: true,
-                minifyJS: true,
+                // minifyCSS: true,
+                // minifyJS: (text, inline) => {
+                //     return UglifyJS.minify(text).code
+                // },
                 removeComments: true,
             })
         },
     },
     {
+        from: path.resolve('src/content-script/'),
+        to: `${path.resolve('dist')}/content-script/[name].min.[ext]`,
+        transform(content) {
+            return UglifyJS.minify(content.toString()).code
+        },
+    },
+    {
         from: path.resolve('src/icons/'),
-        to: `${path.resolve('dist')}/[name].[ext]`,
+        to: `${path.resolve('dist')}/icons/[name].[ext]`,
     },
 ]
 

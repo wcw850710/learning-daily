@@ -575,7 +575,8 @@ export default {
                                     .then(() => {
                                         this.fetchLists()
                                         chrome.tabs.executeScript(null, {
-                                            file: './cs-penHidden.js',
+                                            file:
+                                                './content-script/penHidden.min.js',
                                         })
                                     }),
                             )
@@ -608,14 +609,14 @@ export default {
             if (!this.hasWeb)
                 return this.$my.alert(this.$refs.mainRef, '此連結尚未新增')
             chrome.tabs.executeScript(null, {
-                file: './cs-pen.js',
+                file: './content-script/pen.min.js',
             })
         },
         togglePen() {
             if (!this.hasWeb)
                 return this.$my.alert(this.$refs.mainRef, '此連結尚未新增')
             chrome.tabs.executeScript(null, {
-                file: './cs-penToggle.js',
+                file: './content-script/penToggle.min.js',
             })
         },
         goToChart() {
