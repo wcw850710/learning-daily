@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "每天學一點",
     "description": "每天學一點，成功近一點",
-    "version": "1.33",
+    "version": "1.44",
     "options_page": "options.html",
     "icons": {
         "16": "icon16.png",
