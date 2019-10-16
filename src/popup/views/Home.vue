@@ -3,6 +3,73 @@
         class="main"
         ref="mainRef"
     >
+        <Modal
+            ref="createModalRef"
+            class="create-modal"
+        >
+            <template #title>新增記憶事項</template>
+            <div class="create-modal__list">
+                <input
+                    class="create-modal__list__input"
+                    :class="{'create-modal__list__input--valid': createListName}"
+                    type="text"
+                    ref="createListNameRef"
+                    v-model="createListName"
+                    @keydown.enter="setData"
+                >
+                <label class="create-modal__list__name">名字</label>
+            </div>
+            <div
+                class="create-modal__list"
+                v-if="createListIsWeb"
+            >
+                <input
+                    type="checkbox"
+                    class="create-modal__list__checkbox"
+                    v-model="createListIsNewColor"
+                >
+                <span
+                    class="create-modal__list__text"
+                    style="margin-top: -15px;"
+                >
+                    是否新增顏色，下個顏色為 (<i
+                        class="create-modal__list__text__color"
+                        :style="{backgroundColor: createListNextColor}"
+                    ></i>)
+                </span>
+            </div>
+            <button
+                class="create-modal__btn"
+                @click="setData"
+            >新增</button>
+        </Modal>
+        <Modal
+            class="first-login-modal"
+            ref="firstLoginModalRef"
+            :canHide="false"
+        >
+            <template #title>首次登入</template>
+            <div class="first-login-modal__list">
+                <input
+                    class="first-login-modal__list__input"
+                    :class="{'first-login-modal__list__input--valid': firstWidth}"
+                    type="text"
+                    ref="firstWidthRef"
+                    v-model="firstWidth"
+                    @keydown.enter="setFirstData"
+                >
+                <label class="first-login-modal__list__name">視窗寬度
+                    <span class="first-login-modal__list__name__tip">
+                        (提示: 預設為螢幕寬度)
+                    </span>
+                </label>
+            </div>
+            <button
+                class="first-login-modal__btn"
+                @click="setFirstData"
+            >確認</button>
+        </Modal>
+
         <Header>{{fightingWord ? fightingWord : '每天學一點，成功近一點。'}}</Header>
         <section
             class="dates-banner"
@@ -124,24 +191,39 @@
                     顯示
                 </span>
             </div>
-            <div class="footer__list">
-                <label
-                    for="main-checkbox"
-                    class="footer__list__btn footer__list__btn-main"
-                >
+            <div
+                class="footer__list"
+                @click="isShowFMainModal = !isShowFMainModal"
+            >
+                <button class="footer__list__btn footer__list__btn-main">
                     <i class="fas fa-ellipsis-h"></i>
-                </label>
-                <input
-                    type="checkbox"
-                    id="main-checkbox"
-                    class="footer__list__btn-main__checkbox"
-                >
+                </button>
                 <span class="footer__list__text">
                     選單
                 </span>
-                <div class="footer__list__btn-main__modal">
-                    <div class="footer__list__btn-main__modal__list">
-                        <span class="footer__list__btn-main__modal__list__name">寬: {{currentWidth}}</span>
+                <div
+                    class="footer__list__btn-main__modal"
+                    v-if="isShowFMainModal"
+                >
+                    <div
+                        class="footer__list__btn-main__modal__list"
+                        @click.stop="editFWidthHandle"
+                    >
+                        <span
+                            class="footer__list__btn-main__modal__list__width-name"
+                            v-if="!isEditFWidth"
+                        >
+                            寬: {{editFWidth}}
+                        </span>
+                        <input
+                            class="footer__list__btn-main__modal__list__width-input"
+                            v-else
+                            ref="editFWidthRef"
+                            v-model="editFWidth"
+                            @blur="editFWidthSet"
+                            @keydown.enter="editFWidthSet"
+                            type="text"
+                        />
                     </div>
                     <div
                         class="footer__list__btn-main__modal__list"
@@ -171,72 +253,6 @@
                 </span>
             </div>
         </footer>
-        <Modal
-            ref="createModalRef"
-            class="create-modal"
-        >
-            <template #title>新增記憶事項</template>
-            <div class="create-modal__list">
-                <input
-                    class="create-modal__list__input"
-                    :class="{'create-modal__list__input--valid': createListName}"
-                    type="text"
-                    ref="createListNameRef"
-                    v-model="createListName"
-                    @keydown.enter="setData"
-                >
-                <label class="create-modal__list__name">名字</label>
-            </div>
-            <div
-                class="create-modal__list"
-                v-if="createListIsWeb"
-            >
-                <input
-                    type="checkbox"
-                    class="create-modal__list__checkbox"
-                    v-model="createListIsNewColor"
-                >
-                <span
-                    class="create-modal__list__text"
-                    style="margin-top: -15px;"
-                >
-                    是否新增顏色，下個顏色為 (<i
-                        class="create-modal__list__text__color"
-                        :style="{backgroundColor: createListNextColor}"
-                    ></i>)
-                </span>
-            </div>
-            <button
-                class="create-modal__btn"
-                @click="setData"
-            >新增</button>
-        </Modal>
-        <Modal
-            class="first-login-modal"
-            ref="firstLoginModalRef"
-            :canHide="false"
-        >
-            <template #title>首次登入</template>
-            <div class="first-login-modal__list">
-                <input
-                    class="first-login-modal__list__input"
-                    :class="{'first-login-modal__list__input--valid': firstWidth}"
-                    type="text"
-                    ref="firstWidthRef"
-                    v-model="firstWidth"
-                    @keydown.enter="setFirstData"
-                >
-                <label class="first-login-modal__list__name">螢幕寬度
-                    <span class="first-login-modal__list__name__tip">
-                        (提示: 預設為螢幕寬度)
-                    </span>
-                </label>
-            </div>
-            <button
-                class="first-login-modal__btn"
-                @click="setFirstData"
-            >確認</button>
-        </Modal>
     </main>
 </template>
 
@@ -270,6 +286,7 @@ export default {
             isChangeDate: true,
             isImportant: false,
             hasWeb: false,
+            isShowFMainModal: false,
             // add用
             createListName: '',
             createListIsWeb: false,
@@ -278,14 +295,14 @@ export default {
             createListColor: colors[0],
             // 紅、藍、綠、橘、紫、青、粉、黃、黑
             createListColors: colors,
+            color: '',
             // 首次
             firstWidth: 0,
-            //
-            currentWidth: 0,
-            //
-            color: '',
             // 編輯用
             editListStorageChecked: '',
+            isEditFWidth: false,
+            editFWidth: 0,
+            editFStorageWidth: 0,
         }
     },
     components: {
@@ -429,7 +446,7 @@ export default {
                     this.$bg.$firstLogin = false
                     chrome.storage.local.set({ width: this.firstWidth })
                     this.$bg.$width = this.firstWidth
-                    this.currentWidth = this.firstWidth
+                    this.editFWidth = this.firstWidth
                     this.hideFirstLoginModal()
                 })
         },
@@ -633,6 +650,28 @@ export default {
             ] = this.editListStorageChecked
             this.listsDb.doc(uuid).update({ name })
         },
+        editFWidthHandle() {
+            this.isEditFWidth = true
+            this.editFStorageWidth = this.editFWidth
+            this.$nextTick(() => this.$refs.editFWidthRef.focus())
+        },
+        editFWidthSet() {
+            this.isEditFWidth = false
+            const width = Number(this.editFWidth)
+            const alertFnc = alertText => {
+                this.editFWidth = this.editFStorageWidth
+                return this.$my.alert(this.$refs.mainRef, alertText)
+            }
+            if (!width) {
+                return alertFnc('視窗寬度只能為數字')
+            } else if (width > screen.width) {
+                return alertFnc('視窗寬度不得大於螢幕寬度')
+            } else if (width === this.editFStorageWidth) {
+                return
+            }
+            this.$bg.$width = width
+            this.userDb.update({ width })
+        },
     },
     computed: {
         today() {
@@ -687,11 +726,11 @@ export default {
                 if (!this.$bg.$width) {
                     chrome.storage.local.get('width', result => {
                         const width = result.width
-                        this.currentWidth = result.width
+                        this.editFWidth = result.width
                         this.$bg.$width = result.width
                     })
                 } else {
-                    this.currentWidth = this.$bg.$width
+                    this.editFWidth = this.$bg.$width
                 }
             })
         })
