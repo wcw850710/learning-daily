@@ -36,8 +36,10 @@
             <div class="content__table content__header">
                 <ul class="content__table__tr content__header__tr">
                     <li class="content__table__tr__td content__header__tr__td"></li>
-                    <li class="content__table__tr__td content__header__tr__td">名字</li>
-                    <li class="content__table__tr__td content__header__tr__td">重點數</li>
+                    <li class="content__table__tr__td content__header__tr__td">
+                        <span class="content__header__tr__td__nums">數</span>名字
+                    </li>
+                    <li class="content__table__tr__td content__header__tr__td">操作</li>
                 </ul>
             </div>
             <div class="content__table content__body">
@@ -51,11 +53,17 @@
                         @click="urlCreate(list)"
                     >
                         <li class="content__table__tr__td content__body__tr__td">{{index+1}}</li>
-                        <li class="content__table__tr__td content__body__tr__td">{{list.name}}</li>
-                        <li class="content__table__tr__td content__body__tr__td"><b
+                        <li class="content__table__tr__td content__body__tr__td">
+                            <b
+                                class="content__body__tr__td__point"
                                 @click.stop="changeColor(list.color)"
                                 :style="{backgroundColor: list.color}"
-                            >{{list.length}}</b></li>
+                            >{{list.length}}</b>
+                            <span class="content__body__tr__td__name">{{list.name}}</span>
+                        </li>
+                        <li class="content__table__tr__td content__body__tr__td">
+                            <span class="content__body__tr__td__edit">編輯</span>
+                        </li>
                     </ul>
                 </Fragment>
             </div>
@@ -80,15 +88,18 @@
             </div>
             <div
                 class="footer__list"
-                :class="{'footer__list--important': isImportant, 'footer__list--noweb': !hasWeb}"
+                :class="{'footer__list--noweb': !hasWeb}"
             >
                 <button
                     class="footer__list__btn footer__list__btn-eye"
-                    :class="{'footer__list__btn-eye--show': isShowPen}"
+                    :style="{borderColor: hasWeb && color, color: hasWeb && color}"
                     @click="togglePen"
                 ><i class="fas fa-eye"></i>
                 </button>
-                <span class="footer__list__text">
+                <span
+                    class="footer__list__text"
+                    :style="{color: hasWeb && color}"
+                >
                     顯示
                 </span>
             </div>
@@ -248,6 +259,8 @@ export default {
             firstWidth: 0,
             //
             currentWidth: 0,
+            //
+            color: '',
         }
     },
     components: {
@@ -566,6 +579,7 @@ export default {
         },
         changeColor(color) {
             this.$bg.$color = color
+            this.color = color
         },
     },
     computed: {
@@ -613,6 +627,7 @@ export default {
         },
     },
     created() {
+        this.color = this.$bg.$color
         chrome.storage.local.get('id', result => {
             this.userId = result.id
             this.fetchCheckFirstLogin(() => {

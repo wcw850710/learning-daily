@@ -56,9 +56,14 @@
     width: 100%
     min-height: 240px
     padding: 10px 21px 30px
-    font-size: 15px
+    font-size: 14px
     &__header
         border-bottom: 1px solid $green
+        &__tr
+            &__td
+                &:nth-child(2)
+                &__nums
+                    margin-right: 17px
     &__body
         color: $green
         &__tr
@@ -71,21 +76,34 @@
                 background: $green-light
             &__td
                 &:nth-child(2)
+                    display: flex
+                    align-items: center
+                    padding-right: 10px
+                    overflow: hidden
+                &__name
+                    flex: 1
                     white-space: nowrap
                     overflow: hidden
                     text-overflow: ellipsis
-                    padding-right: 10px
-                &:last-child
-                    b
-                        width: 25px
-                        height: 25px
-                        display: flex
-                        align-items: center
-                        justify-content: center
-                        color: $w
-                        background: $orange
-                        border-radius: 50%
-                        font-size: 13px
+                &__point
+                    width: 25px
+                    height: 25px
+                    display: inline-flex
+                    align-items: center
+                    justify-content: center
+                    color: $w
+                    background: $orange
+                    border-radius: 50%
+                    font-size: 12px
+                    transform: scale(.8)
+                    margin-right: 8px
+                    &:hover
+                        opacity: 0.7
+                &__edit
+                    border-bottom: 1px solid transparent
+                    &:hover
+                        opacity: 0.7
+                        border-bottom-color: $green
             &--checked
                 color: $gray-txt
                 position: relative
@@ -98,11 +116,10 @@
                     left: 4%
                     top: 50%
                     transform: translateY(-50%)
-                .content__table__tr__td
-                    &:last-child
-                        b
-                            background: $gray !important
-                            color: $gray-txt
+                .content__body__tr__td
+                    &__edit
+                        &:hover
+                            border-bottom-color: $gray-txt
     &__table
         &__tr
             display: flex
@@ -110,12 +127,12 @@
             &__td
                 padding: 8px 0
                 &:nth-child(1)
-                    width: 50px
-                    padding-left: 21px
+                    flex: 0 0 36px
+                    padding-left: 15px
                 &:nth-child(2)
                     flex: 1
                 &:nth-child(3)
-                    width: 55px
+                    flex: 0 0 52px
 
 .footer
     display: flex
@@ -134,8 +151,8 @@
         min-width: 30px
         &:hover
             .footer__list__btn
-                color: $w
-                background: $green
+                color: $green
+                background: $green-light
                 box-shadow: 0 0 15px rgba($green, .8)
         &__btn
             appearance: none
@@ -200,16 +217,6 @@
             font-size: 12px
             text-align: center
             transform: scale(.9)
-        &--important
-            .footer__list__btn
-                border-color: $orange
-                color: $orange
-            .footer__list__text
-                color: $orange
-            &:hover
-                .footer__list__btn
-                    background: $orange
-                    box-shadow: 0 0 15px rgba($orange, .8)
         &--noweb
             .footer__list__btn
                 border-color: $gray-txt
