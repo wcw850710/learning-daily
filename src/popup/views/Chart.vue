@@ -12,6 +12,7 @@
         <section class="control">
             <div class="control__score">
                 <strong class="control__score__big">{{padNums(pointNums)}}</strong>
+                <b class="control__score__badge">/ {{docNums}}</b>
             </div>
             <div class="control__selects">
                 <Select
@@ -35,18 +36,14 @@
                 <div class="tip__selects__text">- {{currentTipText}}</div>
             </div>
         </section>
-        <section class="chart">
-            <img
-                src="@/assets/chart.png"
-                alt=""
-            >
-            目前暫無數據圖表
-        </section>
+        <svg class="chart">
+        </svg>
     </div>
 </template>
 <script>
 import Header from '../components/Header'
 import Select from '../components/Select'
+import * as d3 from 'd3'
 
 export default {
     data() {
@@ -74,6 +71,7 @@ export default {
             selectedDetailVal: -1,
             detailOptions: [],
             pointNums: 0,
+            docNums: 0,
             currentTipBadge: '',
             currentTipText: '',
             userId: '',
@@ -97,25 +95,29 @@ export default {
         },
     },
     methods: {
-        formatMonth(date) {
-            return this.$bg.formatMonth(date)
-        },
-        formatDate(date) {
-            return this.$bg.formatDate(date)
-        },
+        // formatMonth(date) {
+        //     return this.$bg.formatMonth(date)
+        // },
+        // formatDate(date) {
+        //     return this.$bg.formatDate(date)
+        // },
         goToHome() {
             this.$router.push('/')
         },
         countPointNums(querySnapshot) {
             if (querySnapshot.empty) {
                 this.pointNums = 0
+                this.docNums = 0
             } else {
-                let nums = 0
+                let pointNums = 0
+                let docNums = 0
                 querySnapshot.forEach(doc => {
                     const { lines } = doc.data()
-                    nums += lines.length
+                    pointNums += lines ? lines.length : 0
+                    docNums++
                 })
-                this.pointNums = nums
+                this.pointNums = pointNums
+                this.docNums = docNums
             }
         },
     },
@@ -242,7 +244,110 @@ export default {
             this.userId = id
         })
     },
-    // mounted() {},
+    mounted() {
+        const datas = [
+            [100, 100, 75, 300, 142, 18, 0, 0, 0, 112, 200, 50],
+            [0, 0, 0, 112, 200, 50, 100, 100, 75, 300, 142, 18],
+            [15, 30, 65, 0, 0, 150, 20, 300, 15, 20, 140, 200],
+        ]
+        const colors = [
+            '#00C6D8',
+            '#512c96',
+            '#3c6f9c',
+            '#dd6892',
+            '#f9c6ba',
+            '#5edfff',
+            '#f0134d',
+            '#40bfc1',
+            '#3e64ff',
+            '#52de97',
+            '#8105d8',
+            '#fda77f',
+        ]
+        const grayLight = '#e6e6e6'
+        const grayLightTxt = '#e1e1e1'
+        const gray = '#bdbdbd'
+        const wd = 30
+        const wh = 10
+        const w = 250
+        const h = 200
+        const chart = d3.select('.chart')
+        let maxY = 0
+        datas.forEach(data => {
+            data.forEach(y => {
+                if (y > maxY) maxY = y
+            })
+        })
+        const scaleY = d3
+            .scaleLinear()
+            .range([0, h])
+            .domain([0, maxY])
+
+        // 水平線
+        const hozG = chart.append('g')
+        const hozData = []
+        const hozLen = 10
+        for (let i = 0; i < hozLen; i++) {
+            const val = maxY / (hozLen - 1)
+            if (i === 0) {
+                hozData.push(0)
+            } else {
+                hozData.push(hozData[i - 1] + val)
+            }
+        }
+        hozG.selectAll('text')
+            .data(hozData.sort((a, b) => b - a))
+            .enter()
+            .append('text')
+            .attr('x', 0)
+            .attr('y', (d, i) => (h / (hozLen - 1)) * i + 4 + wh)
+            .style('font-size', '12px')
+            .attr('fill', (d, i) => (i % 2 === 1 ? grayLightTxt : gray))
+            .text(d => ~~d)
+        hozG.selectAll('line')
+            .data(hozData)
+            .enter()
+            .append('line')
+            .attr('x1', wd)
+            .attr('x2', w + wd)
+            .attr('y1', (d, i) => (h / (hozLen - 1)) * i + wh)
+            .attr('y2', (d, i) => (h / (hozLen - 1)) * i + wh)
+            .attr('stroke', (d, i) => (i % 2 === 1 ? grayLight : gray))
+
+        // 月份
+        const months = Array.from(new Array(12), (d, i) => i + 1)
+        const verG = chart.append('g')
+        verG.selectAll('text')
+            .data(months)
+            .enter()
+            .append('text')
+            .attr(
+                'x',
+                (d, i) => (w / months.length) * i + w / months.length + wd - 6,
+            )
+            .attr('y', h + wh + 20)
+            .style('font-size', '12px')
+            .style('fill', gray)
+            .text(d => String(d).padStart(2, '0'))
+
+        // 折線圖
+        datas.forEach((data, index) => {
+            const linesG = chart
+                .append('g')
+                .style('transform', `translateY(${h}px)`)
+            linesG
+                .selectAll('line')
+                .data(data)
+                .enter()
+                .append('line')
+                .attr('x1', (d, i) => (w / data.length) * i + wd)
+                .attr('x2', (d, i) => (w / data.length) * (i + 1) + wd)
+                .attr('y1', (d, i) => -scaleY(i - 1 < 0 ? 0 : data[i - 1]) + wh)
+                .attr('y2', d => -scaleY(d) + wh)
+                .attr('stroke', colors[index])
+                .attr('stroke-width', 2)
+        })
+    },
     // beforeDestroy() {},
 }
 </script>
