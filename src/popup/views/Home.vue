@@ -56,7 +56,7 @@
                         <li class="content__table__tr__td content__body__tr__td">
                             <b
                                 class="content__body__tr__td__point"
-                                @click.stop="changeColor(list.color)"
+                                @click.stop="pointClickChangeColor(list.color)"
                                 :style="{backgroundColor: list.color}"
                             >{{list.length}}</b>
                             <span
@@ -140,7 +140,9 @@
                     選單
                 </span>
                 <div class="footer__list__btn-main__modal">
-                    <div class="footer__list__btn-main__modal__list"><span class="footer__list__btn-main__modal__list__name">寬: {{currentWidth}}</span></div>
+                    <div class="footer__list__btn-main__modal__list">
+                        <span class="footer__list__btn-main__modal__list__name">寬: {{currentWidth}}</span>
+                    </div>
                     <div
                         class="footer__list__btn-main__modal__list"
                         @click="goToChart"
@@ -369,6 +371,7 @@ export default {
                             this.hasWeb = true
                             querySnapshot.forEach(doc => {
                                 const data = doc.data()
+                                this.changeColor(data.color)
                                 if (data.lines) {
                                     if (data.lines.length) {
                                         this.isImportant = true
@@ -573,7 +576,7 @@ export default {
                     createData.width = width + 16
                 }
                 chrome.windows.create(createData)
-                this.$bg.$color = color
+                this.changeColor(color)
 
                 const updateData = {}
                 updateData[this.recentSevenDays[this.dayCurrent]] = 'checked'
@@ -600,6 +603,17 @@ export default {
         },
         goToChart() {
             this.$router.push('/chart')
+        },
+        pointClickChangeColor(color) {
+            this.tabsQuery(tabs => {
+                const url = tabs[0].url
+                const isUrlHasColor = this.lists.some(
+                    list => list.url === url && list.color === color,
+                )
+                if (isUrlHasColor) {
+                    this.changeColor(color)
+                }
+            })
         },
         changeColor(color) {
             this.$bg.$color = color
@@ -670,7 +684,6 @@ export default {
             this.userId = result.id
             this.fetchCheckFirstLogin(() => {
                 this.fetchLists()
-                this.fetchImportantNums()
                 if (!this.$bg.$width) {
                     chrome.storage.local.get('width', result => {
                         const width = result.width
