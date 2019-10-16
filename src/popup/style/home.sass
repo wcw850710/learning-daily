@@ -85,8 +85,18 @@
                     white-space: nowrap
                     overflow: hidden
                     text-overflow: ellipsis
+                &__name-input
+                    appearance: none
+                    flex: 1
+                    border: 0
+                    outline: none
+                    background: none
+                    font-size: 14px
+                    color: $bk
+                    font-weight: 900
                 &__point
                     width: 25px
+                    min-width: 25px
                     height: 25px
                     display: inline-flex
                     align-items: center
@@ -225,6 +235,7 @@
                 color: $gray-txt
             &:hover
                 .footer__list__btn
+                    color: $w
                     background: $gray-txt
                     box-shadow: 0 0 15px rgba($gray-txt, .8)
 

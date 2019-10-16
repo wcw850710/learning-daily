@@ -59,10 +59,31 @@
                                 @click.stop="changeColor(list.color)"
                                 :style="{backgroundColor: list.color}"
                             >{{list.length}}</b>
-                            <span class="content__body__tr__td__name">{{list.name}}</span>
+                            <span
+                                class="content__body__tr__td__name"
+                                v-if="!list.isEdit"
+                            >{{list.name}}</span>
+                            <input
+                                class="content__body__tr__td__name-input"
+                                ref="editListNameRef"
+                                type="text"
+                                v-model="list.name"
+                                @keydown.enter="editListSet(list)"
+                                @blur="editListSet(list)"
+                                v-else
+                            />
                         </li>
                         <li class="content__table__tr__td content__body__tr__td">
-                            <span class="content__body__tr__td__edit">編輯</span>
+                            <span
+                                class="content__body__tr__td__edit"
+                                v-if="!list.isEdit"
+                                @click.stop="editList(list)"
+                            >編輯</span>
+                            <span
+                                class="content__body__tr__td__edit"
+                                v-else
+                                @click.stop="editListSet(list)"
+                            >完成</span>
                         </li>
                     </ul>
                 </Fragment>
@@ -92,13 +113,13 @@
             >
                 <button
                     class="footer__list__btn footer__list__btn-eye"
-                    :style="{borderColor: hasWeb && color, color: hasWeb && color}"
+                    :style="{borderColor: hasWeb ? color : '', color: hasWeb ? color : ''}"
                     @click="togglePen"
                 ><i class="fas fa-eye"></i>
                 </button>
                 <span
                     class="footer__list__text"
-                    :style="{color: hasWeb && color}"
+                    :style="{color: hasWeb ? color : ''}"
                 >
                     顯示
                 </span>
@@ -173,7 +194,10 @@
                     class="create-modal__list__checkbox"
                     v-model="createListIsNewColor"
                 >
-                <span class="create-modal__list__text">
+                <span
+                    class="create-modal__list__text"
+                    style="margin-top: -15px;"
+                >
                     是否新增顏色，下個顏色為 (<i
                         class="create-modal__list__text__color"
                         :style="{backgroundColor: createListNextColor}"
@@ -191,10 +215,7 @@
             :canHide="false"
         >
             <template #title>首次登入</template>
-            <div
-                class="first-login-modal__list"
-                style="margin-top: -15px;"
-            >
+            <div class="first-login-modal__list">
                 <input
                     class="first-login-modal__list__input"
                     :class="{'first-login-modal__list__input--valid': firstWidth}"
@@ -261,6 +282,8 @@ export default {
             currentWidth: 0,
             //
             color: '',
+            // 編輯用
+            editListStorageChecked: '',
         }
     },
     components: {
@@ -372,6 +395,7 @@ export default {
                             const data = doc.data()
                             lists.push({
                                 ...data,
+                                isEdit: false,
                                 uuid: doc.id,
                                 length: data.lines ? data.lines.length : 0,
                             })
@@ -580,6 +604,20 @@ export default {
         changeColor(color) {
             this.$bg.$color = color
             this.color = color
+        },
+        editList(list) {
+            this.editListStorageChecked = list[this.today]
+            list[this.recentSevenDays[this.dayCurrent]] = 'unchecked'
+            list.isEdit = true
+            this.$nextTick(() => this.$refs.editListNameRef[0].focus())
+        },
+        editListSet(list) {
+            const { uuid, name } = list
+            list.isEdit = false
+            list[
+                this.recentSevenDays[this.dayCurrent]
+            ] = this.editListStorageChecked
+            this.listsDb.doc(uuid).update({ name })
         },
     },
     computed: {
