@@ -3,7 +3,6 @@
     "name": "每天學一點",
     "description": "每天學一點，成功近一點",
     "version": "1.45",
-    "options_page": "options.html",
     "icons": {
         "16": "icon16.png",
         "48": "icon48.png",
@@ -12,7 +11,7 @@
     "browser_action": {
         "default_popup": "popup.html"
     },
-    "content_security_policy": "script-src 'self' 'unsafe-eval' https://www.gstatic.com/firebasejs/7.2.0/firebase-app.js https://www.gstatic.com/firebasejs/7.2.0/firebase-firestore.js; object-src 'self'",
+    "content_security_policy": "script-src 'self'; object-src 'self'",
     "background": {
         "page": "bg.html",
         "persistent": true

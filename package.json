@@ -18,8 +18,10 @@
         "@vue/cli-plugin-babel": "^3.11.0",
         "@vue/cli-service": "^3.11.0",
         "copy-webpack-plugin": "^4.6.0",
+        "html-minifier": "^4.0.0",
         "node-sass": "^4.9.0",
         "sass-loader": "^7.1.0",
+        "uglify-es": "^3.3.9",
         "vue-cli-plugin-chrome-ext": "^0.0.5",
         "vue-template-compiler": "^2.6.10"
     },
