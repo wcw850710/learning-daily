@@ -70,80 +70,114 @@ export default {
         },
         login() {
             const loginRef = this.$refs.loginRef
-            const chromeStorageSet = id => {
-                chrome.storage.local.set(
-                    {
-                        id,
-                        fightingWord: this.fightingWord,
-                    },
-                    () => {
-                        this.$bg.tipNums()
-                        this.$router.push('/')
-                    },
-                )
-            }
-            if (this.username) {
-                const dbRef = this.$db.collection('USERS')
-                dbRef
+            if (!this.username) {
+                return this.$my.alert(loginRef, '帳號不能為空')
+            } else {
+                if (!this.password) {
+                    return this.$my.alert(loginRef, '密碼不能為空')
+                }
+                const userRef = this.$db.collection('USERS')
+                userRef
                     .where('username', '==', this.username)
+                    .where('password', '==', this.hash())
                     .get()
                     .then(querySnapshot => {
                         if (querySnapshot.empty) {
-                            if (!this.password) {
-                                return this.$my.alert(
-                                    loginRef,
-                                    '請輸入密碼以便註冊',
-                                )
-                            } else {
-                                dbRef
-                                    .add({
-                                        username: this.username,
-                                        password: this.hash(),
-                                        fighting_word: this.fightingWord,
-                                        firstLogin: true,
-                                    })
-                                    .then(doc => {
-                                        chromeStorageSet(doc.id)
-                                    })
-                            }
+                            return this.$my.alert(loginRef, '帳號或密碼錯誤')
                         } else {
                             querySnapshot.forEach(doc => {
                                 const data = doc.data()
-                                if (!data) {
-                                    register()
-                                } else if (data.password !== this.hash()) {
-                                    return this.$my.alert(
-                                        loginRef,
-                                        '使用者密碼不正確',
+                                const chromeStorageSet = id => {
+                                    chrome.storage.local.set(
+                                        {
+                                            id,
+                                            fightingWord: data.fighting_word,
+                                        },
+                                        () => {
+                                            this.$bg.tipNums()
+                                            this.$router.push('/')
+                                        },
                                     )
-                                } else {
-                                    dbRef
+                                }
+                                const login = () => {
+                                    if (data.width) {
+                                        chrome.storage.local.set(
+                                            {
+                                                width: data.width || null,
+                                            },
+                                            () => chromeStorageSet(doc.id),
+                                        )
+                                    } else {
+                                        chromeStorageSet(doc.id)
+                                    }
+                                }
+                                if (this.fightingWord) {
+                                    userRef
                                         .doc(doc.id)
                                         .update({
+                                            aaa: 'aaa',
                                             fighting_word: this.fightingWord,
                                         })
-                                        .then(() => {
-                                            if (data.width) {
-                                                chrome.storage.local.set(
-                                                    {
-                                                        width:
-                                                            data.width || null,
-                                                    },
-                                                    () =>
-                                                        chromeStorageSet(
-                                                            doc.id,
-                                                        ),
-                                                )
-                                            } else {
-                                                chromeStorageSet(doc.id)
-                                            }
-                                        })
+                                        .then(() => login())
+                                } else {
+                                    login()
                                 }
                             })
                         }
+                        // if (querySnapshot.empty) {
+                        //     if (!this.password) {
+                        //         return this.$my.alert(
+                        //             loginRef,
+                        //             '請輸入密碼以便註冊',
+                        //         )
+                        //     } else {
+                        //         dbRef
+                        //             .add({
+                        //                 username: this.username,
+                        //                 password: this.hash(),
+                        //                 fighting_word: this.fightingWord,
+                        //                 firstLogin: true,
+                        //             })
+                        //             .then(doc => {
+                        //                 chromeStorageSet(doc.id)
+                        //             })
+                        //     }
+                        // } else {
+                        //     querySnapshot.forEach(doc => {
+                        //         const data = doc.data()
+                        //         if (!data) {
+                        //             register()
+                        //         } else if (data.password !== this.hash()) {
+                        //             return this.$my.alert(
+                        //                 loginRef,
+                        //                 '使用者密碼不正確',
+                        //             )
+                        //         } else {
+                        //             dbRef
+                        //                 .doc(doc.id)
+                        //                 .update({
+                        //                     fighting_word: this.fightingWord,
+                        //                 })
+                        //                 .then(() => {
+                        //                     if (data.width) {
+                        //                         chrome.storage.local.set(
+                        //                             {
+                        //                                 width:
+                        //                                     data.width || null,
+                        //                             },
+                        //                             () =>
+                        //                                 chromeStorageSet(
+                        //                                     doc.id,
+                        //                                 ),
+                        //                         )
+                        //                     } else {
+                        //                         chromeStorageSet(doc.id)
+                        //                     }
+                        //                 })
+                        //         }
+                        //     })
+                        // }
                     })
-            } else {
-                return this.$my.alert(loginRef, '請輸入帳號密碼')
             }
         },
     },

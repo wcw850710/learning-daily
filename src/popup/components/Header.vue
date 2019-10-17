@@ -23,11 +23,15 @@ export default {
     // computed: {},
     methods: {
         logout() {
-            chrome.storage.local.remove(['id'], result => {
-                this.$bg.$firstLogin = true
-                this.$bg.$width = null
-                chrome.storage.local.remove(['width'])
-                this.$router.push('/login')
+            chrome.storage.local.get('id', result => {
+                const id = result.id
+                this.$bg.tipNums(id)
+                chrome.storage.local.remove('id', () => {
+                    this.$bg.$firstLogin = true
+                    this.$bg.$width = null
+                    chrome.storage.local.remove('width')
+                    this.$router.push('/login')
+                })
             })
         },
     },

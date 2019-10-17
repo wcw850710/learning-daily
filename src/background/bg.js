@@ -31,9 +31,13 @@ function formatMonth(time = new Date()) {
     return formatDate
 }
 
-function tipNums() {
-    chrome.storage.local.get('id', result => {
-        const id = result.id
+function tipNums(paramsId) {
+    const clearAction = () => {
+        chrome.browserAction.setBadgeText({
+            text: '',
+        })
+    }
+    const runDb = id =>
         listsDb(id)
             .where('dates', 'array-contains', formatDate())
             .onSnapshot(querySnapshot => {
@@ -44,6 +48,7 @@ function tipNums() {
                         length++
                     }
                 })
+                if (paramsId) return clearAction()
                 if (length) {
                     chrome.browserAction.setBadgeText({
                         text: String(length),
@@ -52,11 +57,15 @@ function tipNums() {
                         color: '#FF663E',
                     })
                 } else {
-                    chrome.browserAction.setBadgeText({
-                        text: '',
-                    })
+                    clearAction()
                 }
             })
+    if (paramsId) {
+        return runDb(paramsId)
+    }
+    chrome.storage.local.get('id', result => {
+        const id = result.id
+        runDb(id)
     })
 }
 
