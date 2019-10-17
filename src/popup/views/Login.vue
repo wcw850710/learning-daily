@@ -3,6 +3,22 @@
         class="login"
         ref="loginRef"
     >
+        <Modal ref="registerModalRef">
+            <template #title>註冊</template>
+            <input
+                type="text"
+                v-model="regUsername"
+            />
+            <input
+                type="text"
+                v-model="regPassword"
+            />
+            <input
+                type="text"
+                v-model="regCheckPassword"
+            />
+            <button @click="register">註冊</button>
+        </Modal>
         <img
             class="login__logo"
             src="@/assets/logo.png"
@@ -39,7 +55,10 @@
             >
             <div class="login__input-wrapper__name">激勵小語(非必填)</div>
         </div>
-        <div class="login__first">首次登入即註冊</div>
+        <div
+            class="login__first"
+            @click="showRegisterModalRef"
+        >註冊</div>
         <button
             class="login__submit"
             @click="login"
@@ -48,6 +67,8 @@
 </template>
 <script>
 import crypto from 'crypto'
+import Modal from '../components/Modal'
+import uuid from 'uuid/v4'
 
 export default {
     data() {
@@ -55,10 +76,15 @@ export default {
             username: '',
             password: '',
             fightingWord: '',
+            regUsername: '',
+            regPassword: '',
+            regCheckPassword: '',
         }
     },
     props: {},
-    components: {},
+    components: {
+        Modal,
+    },
     computed: {},
     methods: {
         hash(val = this.password) {
@@ -180,11 +206,22 @@ export default {
                     })
             }
         },
+        showRegisterModalRef() {
+            return this.$refs.registerModalRef.show()
+        },
+        register() {
+            if (!this.regUsername) return this.$my.alert(loginRef, '請輸入帳號')
+            if (!this.regPassword) return this.$my.alert(loginRef, '請輸入帳號')
+            // regUsername: '',
+            // regPassword: '',
+            // regCheckPassword: '',
+        },
     },
     watch: {},
     created() {},
     mounted() {
         this.$refs.usernameRef.focus()
+        this.$db.collection('USERS').add({ username: 'jeff', password: '1235' })
     },
     beforeDestroy() {},
 }
