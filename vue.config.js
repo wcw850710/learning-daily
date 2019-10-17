@@ -23,7 +23,10 @@ const plugins = [
     },
     {
         from: path.resolve('src/background/'),
-        to: `${path.resolve('dist')}/background/[name].[ext]`,
+        to: `${path.resolve('dist')}/background/[name].min.[ext]`,
+        transform(content) {
+            return UglifyJS.minify(content.toString()).code
+        },
         ignore: ['*.html'],
     },
     {
