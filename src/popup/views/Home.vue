@@ -277,7 +277,7 @@ export default {
         ]
         return {
             lists: [],
-            userId: '',
+            username: '',
             fightingWord: '',
             dayCurrent: 3,
             times: [0, 1, 3, 6, 14, 29, 89],
@@ -366,7 +366,7 @@ export default {
         fetchCheckFirstLogin(callback) {
             if (!this.$bg.$firstLogin) return callback()
 
-            this.userDb.get().then(querySnapshot => {
+            this.userDB.get().then(querySnapshot => {
                 const data = querySnapshot.data()
                 if (data.firstLogin) {
                     this.firstWidth = screen.width
@@ -380,7 +380,7 @@ export default {
         fetchImportantNums() {
             this.tabsQuery(tabs => {
                 const url = tabs[0].url
-                this.listsDb
+                this.userListsDB
                     .where('url', '==', url)
                     .get()
                     .then(querySnapshot => {
@@ -405,7 +405,7 @@ export default {
             this.isChangeDate = false
             this.tabsQuery(tabs => {
                 const currentDay = this.recentSevenDays[this.dayCurrent]
-                this.listsDb
+                this.userListsDB
                     .where('dates', 'array-contains', currentDay)
                     .get()
                     .then(querySnapshot => {
@@ -440,7 +440,7 @@ export default {
             return this.$refs.firstLoginModalRef.hide()
         },
         setFirstData() {
-            this.userDb
+            this.userDB
                 .update({ firstLogin: false, width: this.firstWidth })
                 .then(() => {
                     this.$bg.$firstLogin = false
@@ -454,7 +454,7 @@ export default {
             this.tabsQuery(tabs => {
                 const url = tabs[0].url
                 if (url) {
-                    this.listsDb
+                    this.userListsDB
                         .where('url', '==', url)
                         .get()
                         .then(querySnapshot => {
@@ -524,13 +524,13 @@ export default {
                         pushData[formatDate] = 'unchecked'
                         pushData.dates.push(formatDate)
                     }
-                    this.listsDb
+                    this.userListsDB
                         .where('url', '==', url)
                         .where('color', '==', this.createListColor)
                         .get()
                         .then(querySnapshot => {
                             if (querySnapshot.empty) {
-                                this.listsDb
+                                this.userListsDB
                                     .add({
                                         ...pushData,
                                         color: this.createListColor,
@@ -545,7 +545,7 @@ export default {
                                             this.$refs.mainRef,
                                             '此連結已經創建',
                                         )
-                                    this.listsDb
+                                    this.userListsDB
                                         .doc(id)
                                         .update(pushData)
                                         .then(() => this.fetchLists())
@@ -564,12 +564,12 @@ export default {
             this.tabsQuery(tabs => {
                 const url = tabs[0].url
                 if (url) {
-                    this.listsDb
+                    this.userListsDB
                         .where('url', '==', url)
                         .get()
                         .then(querySnapshot => {
                             querySnapshot.forEach(doc =>
-                                this.listsDb
+                                this.userListsDB
                                     .doc(doc.id)
                                     .delete()
                                     .then(() => {
@@ -599,7 +599,7 @@ export default {
                 const updateData = {}
                 updateData[this.recentSevenDays[this.dayCurrent]] = 'checked'
 
-                this.listsDb
+                this.userListsDB
                     .doc(uuid)
                     .update(updateData)
                     .then(() => this.fetchLists())
@@ -649,7 +649,7 @@ export default {
             list[
                 this.recentSevenDays[this.dayCurrent]
             ] = this.editListStorageChecked
-            this.listsDb.doc(uuid).update({ name })
+            this.userListsDB.doc(uuid).update({ name })
         },
         editFWidthHandle() {
             this.isEditFWidth = true
@@ -671,7 +671,7 @@ export default {
                 return
             }
             this.$bg.$width = width
-            this.userDb.update({ width })
+            this.userDB.update({ width })
         },
     },
     computed: {
@@ -690,14 +690,14 @@ export default {
             }
             return days
         },
-        listsDb() {
+        userListsDB() {
             return this.$db
                 .collection('USERS')
-                .doc(this.userId)
+                .doc(this.username)
                 .collection('LISTS')
         },
-        userDb() {
-            return this.$db.collection('USERS').doc(this.userId)
+        userDB() {
+            return this.$db.collection('USERS').doc(this.username)
         },
     },
     watch: {
@@ -720,8 +720,8 @@ export default {
     },
     created() {
         this.color = this.$bg.$color
-        chrome.storage.local.get('id', result => {
-            this.userId = result.id
+        chrome.storage.local.get('username', result => {
+            this.username = result.username
             this.fetchCheckFirstLogin(() => {
                 this.fetchLists()
                 if (!this.$bg.$width) {

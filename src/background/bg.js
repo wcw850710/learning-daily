@@ -1,20 +1,11 @@
-const firebaseConfig = {
-    apiKey: 'AIzaSyCtx5J2x18iLlMIDURgMecmaVkfh6_OSeQ',
-    authDomain: 'pagemaker-23fec.firebaseapp.com',
-    projectId: 'pagemaker-23fec',
-}
+var _app = null
 
-const app = firebase.initializeApp(firebaseConfig)
-const db = app.firestore()
-const listsDb = userId =>
-    db
+const listsDB = username =>
+    _app
+        .firestore()
         .collection('USERS')
-        .doc(userId)
+        .doc(username)
         .collection('LISTS')
-
-function dbConfig() {
-    return firebaseConfig
-}
 
 function formatDate(time = new Date()) {
     const year = time.getFullYear()
@@ -37,8 +28,8 @@ function tipNums(paramsId) {
             text: '',
         })
     }
-    const runDb = id =>
-        listsDb(id)
+    const runDb = username =>
+        listsDB(username)
             .where('dates', 'array-contains', formatDate())
             .onSnapshot(querySnapshot => {
                 let length = 0
@@ -63,17 +54,19 @@ function tipNums(paramsId) {
     if (paramsId) {
         return runDb(paramsId)
     }
-    chrome.storage.local.get('id', result => {
-        const id = result.id
-        runDb(id)
+    chrome.storage.local.get('username', result => {
+        const username = result.username
+        var user = _app.auth().currentUser
+        console.log(user, username)
+        runDb(username)
     })
 }
 
 function pushLinesFetchData(url, lineData, windowWidth) {
-    chrome.storage.local.get('id', result => {
-        const id = result.id
-        const db = listsDb(id)
-        db.where('url', '==', url)
+    chrome.storage.local.get('username', result => {
+        const username = result.username
+        const DB = listsDB(username)
+        DB.where('url', '==', url)
             .where('color', '==', $color)
             .get()
             .then(querySnapshot => {
@@ -81,16 +74,16 @@ function pushLinesFetchData(url, lineData, windowWidth) {
                     const { width, lines } = doc.data()
                     const id = doc.id
                     if (!width) {
-                        db.doc(id).update({
+                        DB.doc(id).update({
                             width: windowWidth,
                         })
                     }
                     if (lines) {
-                        db.doc(id).update({
+                        DB.doc(id).update({
                             lines: [...lines, lineData],
                         })
                     } else {
-                        db.doc(id).update({
+                        DB.doc(id).update({
                             lines: [lineData],
                         })
                     }
@@ -100,10 +93,10 @@ function pushLinesFetchData(url, lineData, windowWidth) {
 }
 
 function removeLinesFetchData(url, lineData, sendRes) {
-    chrome.storage.local.get('id', result => {
-        const id = result.id
-        const db = listsDb(id)
-        db.where('url', '==', url)
+    chrome.storage.local.get('username', result => {
+        const username = result.username
+        const DB = listsDB(username)
+        DB.where('url', '==', url)
             .get()
             .then(querySnapshot => {
                 querySnapshot.forEach(doc => {
@@ -116,7 +109,7 @@ function removeLinesFetchData(url, lineData, sendRes) {
                     lines.splice(index, 1)
                     const id = doc.id
                     const newLines = lines
-                    db.doc(id)
+                    DB.doc(id)
                         .update({
                             lines: newLines,
                         })
@@ -127,10 +120,10 @@ function removeLinesFetchData(url, lineData, sendRes) {
 }
 
 function toggleLinesFetchData(url, sendRes) {
-    chrome.storage.local.get('id', result => {
-        const id = result.id
-        const db = listsDb(id)
-        db.where('url', '==', url)
+    chrome.storage.local.get('username', result => {
+        const username = result.username
+        const DB = listsDB(username)
+        DB.where('url', '==', url)
             .get()
             .then(querySnapshot => {
                 if (querySnapshot.empty) return alert('此連結尚未有重點')
@@ -175,9 +168,9 @@ chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
 
 chrome.commands.onCommand.addListener(async command => {
     const isLogin = await new Promise((res, rej) =>
-        chrome.storage.local.get('id', result => {
-            const id = result.id
-            if (!id) res(false)
+        chrome.storage.local.get('username', result => {
+            const username = result.username
+            if (!username) res(false)
             else res(true)
         }),
     )
@@ -212,9 +205,9 @@ chrome.commands.onCommand.addListener(async command => {
 
     if (!url) return alert('沒有連結')
 
-    chrome.storage.local.get('id', result => {
-        const id = result.id
-        listsDb(id)
+    chrome.storage.local.get('username', result => {
+        const username = result.username
+        listsDB(username)
             .where('url', '==', url)
             .get()
             .then(querySnapshot => {
@@ -240,4 +233,4 @@ chrome.commands.onCommand.addListener(async command => {
 
 var $color = '#ff2828'
 var $firstLogin = true
-var $width = null
+var $width = 0

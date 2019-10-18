@@ -23,14 +23,18 @@ export default {
     // computed: {},
     methods: {
         logout() {
-            chrome.storage.local.get('id', result => {
-                const id = result.id
-                this.$bg.tipNums(id)
-                chrome.storage.local.remove('id', () => {
-                    this.$bg.$firstLogin = true
-                    this.$bg.$width = null
-                    chrome.storage.local.remove('width')
-                    this.$router.push('/login')
+            const user = this.$auth.currentUser
+            this.$auth.signOut().then(() => {
+                user.delete()
+                chrome.storage.local.get('username', result => {
+                    const username = result.username
+                    this.$bg.tipNums(username)
+                    chrome.storage.local.remove('username', () => {
+                        this.$bg.$firstLogin = true
+                        this.$bg.$width = 0
+                        chrome.storage.local.remove('width')
+                        this.$router.push('/login')
+                    })
                 })
             })
         },
