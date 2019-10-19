@@ -1,25 +1,20 @@
-var _app = null
+const listsDB = id => _app.database().ref('USERS/' + id + '/LISTS')
 
-const listsDB = username =>
-    _app
-        .firestore()
-        .collection('USERS')
-        .doc(username)
-        .collection('LISTS')
-
-function formatDate(time = new Date()) {
+function formatDate(time = new Date(), type = 'YY-MM-DD') {
     const year = time.getFullYear()
     const month = String(time.getMonth() + 1).padStart(2, '0')
     const date = String(time.getDate()).padStart(2, '0')
-    const formatDate = `${year}-${month}-${date}`
-    return formatDate
-}
-
-function formatMonth(time = new Date()) {
-    const year = time.getFullYear()
-    const month = String(time.getMonth() + 1).padStart(2, '0')
-    const formatDate = `${year}-${month}`
-    return formatDate
+    const hour = new Date().getHours()
+    const minute = new Date().getMinutes()
+    const second = new Date().getSeconds()
+    switch (type) {
+        case 'YY-MM-DD':
+            return `${year}-${month}-${date}`
+        case 'YY-MM':
+            return `${year}-${month}`
+        case 'YY-MM-DD hh:mm:ss':
+            return `${year}-${month}-${date} ${hour}:${minute}:${second}`
+    }
 }
 
 function tipNums(paramsId) {
@@ -28,14 +23,15 @@ function tipNums(paramsId) {
             text: '',
         })
     }
-    const runDb = username =>
-        listsDB(username)
-            .where('dates', 'array-contains', formatDate())
-            .onSnapshot(querySnapshot => {
+    const runDb = id =>
+        listsDB(id)
+            .orderByChild(formatDate())
+            .on('value', snap => {
                 let length = 0
-                querySnapshot.forEach(doc => {
-                    const data = doc.data()
-                    if (data[formatDate(new Date())] === 'unchecked') {
+                snap.forEach(doc => {
+                    const data = doc.val()
+                    console.log('bg1', data)
+                    if (data[formatDate()] === 'unchecked') {
                         length++
                     }
                 })
@@ -52,19 +48,17 @@ function tipNums(paramsId) {
                 }
             })
     if (paramsId) {
-        return runDb(paramsId)
+        return listsDB(id).off('value')
     }
-    chrome.storage.local.get('username', result => {
-        const username = result.username
-        var user = _app.auth().currentUser
-        console.log(user, username)
-        runDb(username)
+    chrome.storage.local.get('id', result => {
+        const id = result.id
+        runDb(id)
     })
 }
 
 function pushLinesFetchData(url, lineData, windowWidth) {
-    chrome.storage.local.get('username', result => {
-        const username = result.username
+    chrome.storage.local.get('id', result => {
+        const id = result.id
         const DB = listsDB(username)
         DB.where('url', '==', url)
             .where('color', '==', $color)
@@ -93,8 +87,8 @@ function pushLinesFetchData(url, lineData, windowWidth) {
 }
 
 function removeLinesFetchData(url, lineData, sendRes) {
-    chrome.storage.local.get('username', result => {
-        const username = result.username
+    chrome.storage.local.get('id', result => {
+        const id = result.id
         const DB = listsDB(username)
         DB.where('url', '==', url)
             .get()
@@ -120,8 +114,8 @@ function removeLinesFetchData(url, lineData, sendRes) {
 }
 
 function toggleLinesFetchData(url, sendRes) {
-    chrome.storage.local.get('username', result => {
-        const username = result.username
+    chrome.storage.local.get('id', result => {
+        const id = result.id
         const DB = listsDB(username)
         DB.where('url', '==', url)
             .get()
@@ -168,8 +162,8 @@ chrome.runtime.onMessage.addListener((req, sender, sendRes) => {
 
 chrome.commands.onCommand.addListener(async command => {
     const isLogin = await new Promise((res, rej) =>
-        chrome.storage.local.get('username', result => {
-            const username = result.username
+        chrome.storage.local.get('id', result => {
+            const id = result.id
             if (!username) res(false)
             else res(true)
         }),
@@ -205,8 +199,8 @@ chrome.commands.onCommand.addListener(async command => {
 
     if (!url) return alert('沒有連結')
 
-    chrome.storage.local.get('username', result => {
-        const username = result.username
+    chrome.storage.local.get('id', result => {
+        const id = result.id
         listsDB(username)
             .where('url', '==', url)
             .get()

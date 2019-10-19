@@ -65,10 +65,7 @@ export default {
     },
     computed: {
         usersDB() {
-            return this.$db.collection('USERS')
-        },
-        _usersDB() {
-            return this.$db.collection('_USERS')
+            return this.$db.ref('USERS')
         },
     },
     methods: {
@@ -79,10 +76,10 @@ export default {
                 .digest('hex')
             return hash
         },
-        chromeStorageSet(fightingWord, width) {
+        chromeStorageSet(key, fightingWord, width) {
             chrome.storage.local.set(
                 {
-                    username: this.username,
+                    id: key,
                     width,
                     fightingWord,
                 },
@@ -92,71 +89,86 @@ export default {
                 },
             )
         },
-        authLogin({ fighting_word, width }) {
-            this.$auth.signInAnonymously().then(user => {
-                this._usersDB.doc(this.username).update({
-                    uid: user.user.uid,
-                })
-                if (
-                    this.fighting_word &&
-                    fighting_word !== this.fighting_word
-                ) {
-                    this.usersDB.doc(this.username).update({
-                        fighting_word: this.fighting_word,
-                    })
-                }
-                this.chromeStorageSet(fighting_word, width)
-            })
+        authLogin(callback) {
+            this.$auth.signInAnonymously().then(user => callback(user))
         },
-        authRegister() {
-            this.$auth.signInAnonymously().then(user => {
-                this.usersDB
-                    .doc(this.username)
-                    .set({
-                        width: 0,
-                        fighting_word: this.fightingWord,
-                        firstLogin: true,
-                        createTime: new Date(),
+        register(user) {
+            const uid = user.user.uid
+            this.usersDB
+                .push({
+                    username: this.username,
+                    width: 0,
+                    fighting_word: this.fightingWord,
+                    firstLogin: true,
+                    createTime: this.$bg.formatDate(
+                        new Date(),
+                        'YY-MM-DD hh:mm:ss',
+                    ),
+                })
+                .then(snap => {
+                    const key = snap.key
+                    this.$db.ref('_USERS/' + key).set({
+                        password: this.hash(),
+                        uid,
                     })
-                    .then(() => {
-                        this.$bg.$firstLogin = true
-                        this._usersDB.doc(this.username).set({
-                            uid: user.user.uid,
-                            password: this.hash(),
-                        })
-                        this.chromeStorageSet(this.fightingWord, 0)
-                    })
-            })
+                    this.chromeStorageSet(key, this.fightingWord, 0)
+                })
         },
         login() {
             const loginRef = this.$refs.loginRef
-            if (!this.username) {
-                return this.$my.alert(loginRef, '帳號不能為空')
-            } else {
-                if (!this.password) {
-                    return this.$my.alert(loginRef, '密碼不能為空')
-                }
+            if (!this.username) return this.$my.alert(loginRef, '帳號不能為空')
+            if (!this.password) return this.$my.alert(loginRef, '密碼不能為空')
 
-                this.usersDB
-                    .doc(this.username)
-                    .get()
-                    .then(snap => {
-                        if (!snap.exists) {
-                            return this.authRegister()
-                        }
-                        this.usersDB
-                            .where('username', '==', this.username)
-                            .where('password', '==', this.hash())
-                            .get()
-                            .then(() => {
-                                this.authLogin(snap.data())
-                            })
-                            .catch(err => {
-                                console.log(err)
-                                this.$my.alert(loginRef, '帳號或密碼錯誤')
-                            })
-                    })
-            }
+            this.usersDB
+                .orderByChild('username')
+                .equalTo(this.username)
+                .once('value', snap => {
+                    if (!snap.exists()) {
+                        this.authLogin(this.register)
+                    } else {
+                        snap.forEach(doc => {
+                            const key = doc.key
+                            const { fighting_word, width } = doc.val()
+                            this.$db
+                                .ref('USERS/' + key)
+                                .orderByChild('password')
+                                .equalTo(this.hash())
+                                .once('value', () =>
+                                    this.authLogin(user => {
+                                        this.$db
+                                            .ref('_USERS/' + key)
+                                            .update({
+                                                uid: user.user.uid,
+                                            })
+                                            .then(() => {
+                                                if (
+                                                    !this.fightingWord ||
+                                                    this.fightingWord !==
+                                                        fighting_word
+                                                )
+                                                    this.$db
+                                                        .ref('USERS/' + key)
+                                                        .update({
+                                                            fighting_word: this
+                                                                .fightingWord,
+                                                        })
+                                                        .catch(err => {
+                                                            1, err
+                                                        })
+                                            })
+                                        this.chromeStorageSet(
+                                            key,
+                                            this.fightingWord || fighting_word,
+                                            width,
+                                        )
+                                    }),
+                                )
+                                .catch(() =>
+                                    this.$my.alert(loginRef, '帳號或密碼錯誤'),
+                                )
+                        })
+                    }
+                })
         },
     },
     watch: {},

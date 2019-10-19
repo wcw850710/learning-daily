@@ -720,8 +720,8 @@ export default {
     },
     created() {
         this.color = this.$bg.$color
-        chrome.storage.local.get('username', result => {
-            this.username = result.username
+        chrome.storage.local.get('id', result => {
+            this.username = result.id
             this.fetchCheckFirstLogin(() => {
                 this.fetchLists()
                 if (!this.$bg.$width) {

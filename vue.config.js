@@ -27,7 +27,7 @@ const plugins = [
         transform(content) {
             return UglifyJS.minify(content.toString()).code
         },
-        ignore: ['*.html'],
+        ignore: ['*.html', 'db.js'],
     },
     {
         from: path.resolve('src/background/index.html'),
