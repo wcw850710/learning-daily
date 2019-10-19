@@ -26,12 +26,13 @@ function tipNums(paramsId) {
     const runDb = id =>
         listsDB(id)
             .orderByChild(formatDate())
+            .startAt(0)
+            .endAt(1)
             .on('value', snap => {
                 let length = 0
                 snap.forEach(doc => {
                     const data = doc.val()
-                    console.log('bg1', data)
-                    if (data[formatDate()] === 'unchecked') {
+                    if (data[formatDate()] === 0) {
                         length++
                     }
                 })
@@ -48,7 +49,7 @@ function tipNums(paramsId) {
                 }
             })
     if (paramsId) {
-        return listsDB(id).off('value')
+        return listsDB(paramsId).off('value')
     }
     chrome.storage.local.get('id', result => {
         const id = result.id

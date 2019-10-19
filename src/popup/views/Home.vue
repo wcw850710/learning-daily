@@ -116,7 +116,7 @@
                 >
                     <ul
                         class="content__table__tr content__body__tr"
-                        :class="{'content__body__tr--checked': list[recentSevenDays[dayCurrent]] === 'checked'}"
+                        :class="{'content__body__tr--checked': list[recentSevenDays[dayCurrent]] === 1}"
                         @click="urlCreate(list)"
                     >
                         <li class="content__table__tr__td content__body__tr__td">{{index+1}}</li>
@@ -136,7 +136,6 @@
                                 type="text"
                                 v-model="list.name"
                                 @keydown.enter="editListSet(list)"
-                                @blur="editListSet(list)"
                                 v-else
                             />
                         </li>
@@ -277,7 +276,7 @@ export default {
         ]
         return {
             lists: [],
-            username: '',
+            uid: '',
             fightingWord: '',
             dayCurrent: 3,
             times: [0, 1, 3, 6, 14, 29, 89],
@@ -366,8 +365,8 @@ export default {
         fetchCheckFirstLogin(callback) {
             if (!this.$bg.$firstLogin) return callback()
 
-            this.userDB.get().then(querySnapshot => {
-                const data = querySnapshot.data()
+            this.userDB.once('value', snap => {
+                const data = snap.val()
                 if (data.firstLogin) {
                     this.firstWidth = screen.width
                     return this.showFirstLoginModal()
@@ -381,13 +380,13 @@ export default {
             this.tabsQuery(tabs => {
                 const url = tabs[0].url
                 this.userListsDB
-                    .where('url', '==', url)
-                    .get()
-                    .then(querySnapshot => {
-                        if (!querySnapshot.empty) {
+                    .orderByChild('url')
+                    .equalTo(url)
+                    .once('value', snap => {
+                        if (snap.exists()) {
                             this.hasWeb = true
-                            querySnapshot.forEach(doc => {
-                                const data = doc.data()
+                            snap.forEach(doc => {
+                                const data = doc.val()
                                 this.changeColor(data.color)
                                 if (data.lines) {
                                     if (data.lines.length) {
@@ -406,17 +405,19 @@ export default {
             this.tabsQuery(tabs => {
                 const currentDay = this.recentSevenDays[this.dayCurrent]
                 this.userListsDB
-                    .where('dates', 'array-contains', currentDay)
-                    .get()
-                    .then(querySnapshot => {
+                    .orderByChild(currentDay)
+                    .startAt(0)
+                    .endAt(1)
+                    .once('value', snap => {
                         this.isChangeDate = true
                         let lists = []
-                        querySnapshot.forEach(doc => {
-                            const data = doc.data()
+                        snap.forEach(doc => {
+                            const data = doc.val()
                             lists.push({
                                 ...data,
+                                originName: data.name,
                                 isEdit: false,
-                                uuid: doc.id,
+                                uuid: doc.key,
                                 length: data.lines ? data.lines.length : 0,
                             })
                         })
@@ -455,12 +456,12 @@ export default {
                 const url = tabs[0].url
                 if (url) {
                     this.userListsDB
-                        .where('url', '==', url)
-                        .get()
-                        .then(querySnapshot => {
-                            if (!querySnapshot.empty) {
-                                querySnapshot.forEach(doc => {
-                                    const data = doc.data()
+                        .orderByChild('url')
+                        .equalTo(url)
+                        .once('value', snap => {
+                            if (snap.exists()) {
+                                snap.forEach(doc => {
+                                    const data = doc.val()
                                     let index =
                                         this.createListColors.findIndex(
                                             color => color === data.color,
@@ -505,10 +506,15 @@ export default {
             this.tabsQuery(tabs => {
                 const url = tabs[0].url
                 if (url) {
+                    if (!this.createListName)
+                        return this.$my.alert(this.$refs.mainRef, '請輸入名字')
                     const day = 86400000
                     const pushData = {
-                        createTime: new Date(),
-                        dates: [],
+                        createTime: this.$bg.formatDate(
+                            new Date(),
+                            'YY-MM-DD hh:mm:ss',
+                        ),
+                        // dates: [],
                         name: this.createListName,
                         url,
                     }
@@ -521,35 +527,33 @@ export default {
                         const formatDate = this.formatDate(
                             new Date(new Date().getTime() + day * time),
                         )
-                        pushData[formatDate] = 'unchecked'
-                        pushData.dates.push(formatDate)
+                        pushData[formatDate] = 0
+                        // pushData.dates.push(formatDate)
                     }
                     this.userListsDB
-                        .where('url', '==', url)
-                        .where('color', '==', this.createListColor)
-                        .get()
-                        .then(querySnapshot => {
-                            if (querySnapshot.empty) {
+                        .orderByChild('url')
+                        .equalTo(url)
+                        .once('value', snap => {
+                            const pushFetchData = () =>
                                 this.userListsDB
-                                    .add({
+                                    .push({
                                         ...pushData,
                                         color: this.createListColor,
                                     })
                                     .then(() => this.fetchLists())
+                            if (!snap.exists()) {
+                                pushFetchData()
                             } else {
-                                querySnapshot.forEach(doc => {
-                                    const { dates } = doc.data()
-                                    const id = doc.id
-                                    if (dates.length)
-                                        return this.$my.alert(
-                                            this.$refs.mainRef,
-                                            '此連結已經創建',
-                                        )
-                                    this.userListsDB
-                                        .doc(id)
-                                        .update(pushData)
-                                        .then(() => this.fetchLists())
-                                })
+                                if (
+                                    !this.createListIsNewColor ||
+                                    Object.keys(snap.val()).length >=
+                                        this.createListColors.length
+                                )
+                                    return this.$my.alert(
+                                        this.$refs.mainRef,
+                                        '此連結已經創建',
+                                    )
+                                pushFetchData()
                             }
                             this.createListName = ''
                             this.createListIsNewColor = false
@@ -565,27 +569,30 @@ export default {
                 const url = tabs[0].url
                 if (url) {
                     this.userListsDB
-                        .where('url', '==', url)
-                        .get()
-                        .then(querySnapshot => {
-                            querySnapshot.forEach(doc =>
-                                this.userListsDB
-                                    .doc(doc.id)
-                                    .delete()
-                                    .then(() => {
-                                        this.fetchLists()
-                                        chrome.tabs.executeScript(null, {
-                                            file:
-                                                './content-script/penHidden.min.js',
-                                        })
-                                    }),
-                            )
+                        .orderByChild('url')
+                        .equalTo(url)
+                        .once('value', snap => {
+                            snap.forEach(doc => {
+                                chrome.tabs.executeScript(null, {
+                                    file: './content-script/penHidden.min.js',
+                                })
+                                if (
+                                    doc.key ===
+                                    Object.keys(snap.val())[
+                                        Object.keys(snap.val()).length - 1
+                                    ]
+                                )
+                                    this.userListsAfterDB(doc.key)
+                                        .remove()
+                                        .then(() => this.fetchLists())
+                                else this.userListsAfterDB(doc.key).remove()
+                            })
                         })
                 }
             })
         },
         urlCreate(list) {
-            const { url, date, width, uuid, color } = list
+            const { url, width, uuid, color } = list
             chrome.tabs.query({ currentWindow: true, active: true }, tab => {
                 const createData = { url }
                 if (window.screen.width === width || !width) {
@@ -596,11 +603,11 @@ export default {
                 chrome.windows.create(createData)
                 this.changeColor(color)
 
-                const updateData = {}
-                updateData[this.recentSevenDays[this.dayCurrent]] = 'checked'
+                if (list[this.recentSevenDays[this.dayCurrent]]) return
 
-                this.userListsDB
-                    .doc(uuid)
+                const updateData = {}
+                updateData[this.recentSevenDays[this.dayCurrent]] = 1
+                this.userListsAfterDB(uuid)
                     .update(updateData)
                     .then(() => this.fetchLists())
             })
@@ -639,17 +646,25 @@ export default {
         },
         editList(list) {
             this.editListStorageChecked = list[this.today]
-            list[this.recentSevenDays[this.dayCurrent]] = 'unchecked'
+            list[this.recentSevenDays[this.dayCurrent]] = 0
             list.isEdit = true
             this.$nextTick(() => this.$refs.editListNameRef[0].focus())
         },
-        editListSet(list) {
-            const { uuid, name } = list
+        editListInit(list) {
             list.isEdit = false
             list[
                 this.recentSevenDays[this.dayCurrent]
             ] = this.editListStorageChecked
-            this.userListsDB.doc(uuid).update({ name })
+        },
+        editListSet(list) {
+            const { uuid, name } = list
+            this.editListInit(list)
+            list.originName = name
+            this.userListsAfterDB(uuid).update({ name })
+        },
+        editListCancel(list) {
+            this.editListInit(list)
+            list.name = list.originName
         },
         editFWidthHandle() {
             this.isEditFWidth = true
@@ -691,13 +706,14 @@ export default {
             return days
         },
         userListsDB() {
-            return this.$db
-                .collection('USERS')
-                .doc(this.username)
-                .collection('LISTS')
+            return this.$db.ref('USERS/' + this.uid + '/LISTS')
+        },
+        userListsAfterDB() {
+            return afterRef =>
+                this.$db.ref('USERS/' + this.uid + '/LISTS/' + afterRef)
         },
         userDB() {
-            return this.$db.collection('USERS').doc(this.username)
+            return this.$db.ref('USERS/' + this.uid)
         },
     },
     watch: {
@@ -721,7 +737,7 @@ export default {
     created() {
         this.color = this.$bg.$color
         chrome.storage.local.get('id', result => {
-            this.username = result.id
+            this.uid = result.id
             this.fetchCheckFirstLogin(() => {
                 this.fetchLists()
                 if (!this.$bg.$width) {

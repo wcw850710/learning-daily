@@ -34,7 +34,6 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
     chrome.storage.local.get('id', result => {
         let id = result.id
-        console.log(1, id)
         if (!id && to.path !== '/login') {
             next('/login')
         } else {

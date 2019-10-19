@@ -107,11 +107,15 @@ export default {
                 })
                 .then(snap => {
                     const key = snap.key
-                    this.$db.ref('_USERS/' + key).set({
-                        password: this.hash(),
-                        uid,
-                    })
-                    this.chromeStorageSet(key, this.fightingWord, 0)
+                    this.$db
+                        .ref('_USERS/' + key)
+                        .set({
+                            password: this.hash(),
+                            uid,
+                        })
+                        .then(() =>
+                            this.chromeStorageSet(key, this.fightingWord, 0),
+                        )
                 })
         },
         login() {
@@ -152,15 +156,16 @@ export default {
                                                             fighting_word: this
                                                                 .fightingWord,
                                                         })
-                                                        .catch(err => {
-                                                            1, err
-                                                        })
+                                                        .then(() =>
+                                                            this.chromeStorageSet(
+                                                                key,
+                                                                this
+                                                                    .fightingWord ||
+                                                                    fighting_word,
+                                                                width,
+                                                            ),
+                                                        )
                                             })
-                                        this.chromeStorageSet(
-                                            key,
-                                            this.fightingWord || fighting_word,
-                                            width,
-                                        )
                                     }),
                                 )
                                 .catch(() =>
