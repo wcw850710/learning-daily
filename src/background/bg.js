@@ -13,15 +13,15 @@ function formatDate(time = new Date(), type = 'YY-MM-DD') {
     const year = time.getFullYear()
     const month = String(time.getMonth() + 1).padStart(2, '0')
     const date = String(time.getDate()).padStart(2, '0')
-    const hour = new Date().getHours()
-    const minute = new Date().getMinutes()
-    const second = new Date().getSeconds()
     switch (type) {
         case 'YY-MM-DD':
             return `${year}-${month}-${date}`
         case 'YY-MM':
             return `${year}-${month}`
         case 'YY-MM-DD hh:mm:ss':
+            const hour = String(new Date().getHours()).padStart(2, '0')
+            const minute = String(new Date().getMinutes()).padStart(2, '0')
+            const second = String(new Date().getSeconds()).padStart(2, '0')
             return `${year}-${month}-${date} ${hour}:${minute}:${second}`
     }
 }

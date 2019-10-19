@@ -15,4 +15,12 @@ function recentSevenDays() {
     return JSON.stringify(days).replace(/[\[\]]/g, '')
 }
 
-console.log(recentSevenDays())
+// function hash(val = this.password) {
+//     const hash = require('crypto')
+//         .createHash('md5')
+//         .update(val)
+//         .digest('hex')
+//     return hash
+// }
+
+console.log(recentSevenDays)

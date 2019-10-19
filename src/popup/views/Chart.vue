@@ -36,7 +36,10 @@
                 <div class="tip__selects__text">- {{currentTipText}}</div>
             </div>
         </section>
-        <svg class="chart">
+        <svg
+            class="chart"
+            ref="chartRef"
+        >
         </svg>
     </div>
 </template>
@@ -85,40 +88,272 @@ export default {
     },
     computed: {
         listsDb() {
-            return this.$db
-                .collection('USERS')
-                .doc(this.userId)
-                .collection('LISTS')
+            return this.$db.ref('USERS/' + this.userId + '/LISTS')
         },
         padNums() {
             return nums => String(nums).padStart(3, '0')
         },
+        weekFirst() {
+            return (type = 'YY-MM-DD hh:mm:ss') =>
+                this.formatDate(
+                    new Date(
+                        `${new Date().getFullYear()}-${new Date().getMonth() +
+                            1}-${new Date().getDate() -
+                            new Date().getDay() -
+                            5} 00:00:00`,
+                    ),
+                    type,
+                )
+        },
+        weekLast() {
+            return (type = 'YY-MM-DD hh:mm:ss') =>
+                this.formatDate(
+                    new Date(
+                        `${new Date().getFullYear()}-${new Date().getMonth() +
+                            1}-${new Date().getDate() +
+                            (7 - new Date().getDay())} 23:59:59`,
+                    ),
+                    type,
+                )
+        },
     },
     methods: {
-        // formatMonth(date) {
-        //     return this.$bg.formatMonth(date)
-        // },
-        // formatDate(date) {
-        //     return this.$bg.formatDate(date)
-        // },
+        formatDate(date, type) {
+            return this.$bg.formatDate(date, type)
+        },
         goToHome() {
             this.$router.push('/')
         },
-        countPointNums(querySnapshot) {
-            if (querySnapshot.empty) {
+        countPointNums(snap) {
+            if (!snap.exists()) {
                 this.pointNums = 0
                 this.docNums = 0
             } else {
+                const linesObj = {}
                 let pointNums = 0
                 let docNums = 0
-                querySnapshot.forEach(doc => {
-                    const { lines } = doc.data()
+                const firstDay = this.weekFirst('YY-MM-DD')
+                for (let i = 0; i < 7; i++) {
+                    const date = this.formatDate(
+                        new Date(new Date(firstDay).getTime() + 86400000 * i),
+                    )
+                    linesObj[date] = 0
+                }
+                snap.forEach(doc => {
+                    const { createTime, lines } = doc.val()
                     pointNums += lines ? lines.length : 0
                     docNums++
+                    linesObj[createTime.split(' ')[0]] += lines.length
                 })
                 this.pointNums = pointNums
                 this.docNums = docNums
+                const linesData = []
+                for (let key in linesObj) {
+                    linesData.push(linesObj[key])
+                }
+                this.drawChart([linesData])
             }
+        },
+        drawChart(
+            linesData = [
+                [100, 100, 75, 300, 142, 18, 0, 0, 0, 112, 200, 50],
+                [0, 0, 0, 112, 200, 50, 100, 100, 75, 300, 142, 18],
+                [15, 30, 65, 0, 0, 150, 20, 300, 15, 20, 140, 200],
+            ],
+        ) {
+            const colors = [
+                '#00C6D8',
+                '#512c96',
+                '#3c6f9c',
+                '#dd6892',
+                '#f9c6ba',
+                '#5edfff',
+                '#f0134d',
+                '#40bfc1',
+                '#3e64ff',
+                '#52de97',
+                '#8105d8',
+                '#fda77f',
+            ]
+            const grayLight = '#e6e6e6'
+            const grayLightTxt = '#e1e1e1'
+            const gray = '#bdbdbd'
+            const wd = 30
+            const wh = 10
+            const w = 250
+            const h = 200
+            const chart = d3.select('.chart')
+            // function handleMouseMove(ev) {
+            //     console.log(ev)
+            // }
+            // this.$refs.chartRef.addEventListener(`mousemove`, handleMouseMove)
+            let maxY = 0
+            linesData.forEach(data => {
+                data.forEach(y => {
+                    if (y > maxY) maxY = y
+                })
+            })
+            const scaleY = d3
+                .scaleLinear()
+                .range([0, h])
+                .domain([0, maxY])
+
+            // 水平線
+            const hozG = chart.append('g')
+            const hozData = []
+            const hozLen = 10
+            for (let i = 0; i < hozLen; i++) {
+                const val = maxY / (hozLen - 1)
+                if (i === 0) {
+                    hozData.push(0)
+                } else {
+                    hozData.push(hozData[i - 1] + val)
+                }
+            }
+            hozG.selectAll('text')
+                .data(hozData.sort((a, b) => b - a))
+                .enter()
+                .append('text')
+                .attr('x', 0)
+                .attr('y', (d, i) => (h / (hozLen - 1)) * i + 4 + wh)
+                .style('font-size', '12px')
+                .attr('fill', (d, i) => (i % 2 === 1 ? grayLightTxt : gray))
+                .text(d => Math.ceil(d))
+            hozG.selectAll('line')
+                .data(hozData)
+                .enter()
+                .append('line')
+                .attr('x1', wd)
+                .attr('x2', w + wd)
+                .attr('y1', (d, i) => (h / (hozLen - 1)) * i + wh)
+                .attr('y2', (d, i) => (h / (hozLen - 1)) * i + wh)
+                .attr('stroke', (d, i) => (i % 2 === 1 ? grayLight : gray))
+
+            // 月份
+            const months = Array.from(
+                new Array(linesData[0].length),
+                (d, i) => i + 1,
+            )
+            const verG = chart.append('g')
+            verG.selectAll('text')
+                .data(months)
+                .enter()
+                .append('text')
+                .attr(
+                    'x',
+                    (d, i) =>
+                        (w / months.length) * i + w / months.length + wd - 6,
+                )
+                .attr('y', h + wh + 20)
+                .style('font-size', '12px')
+                .style('fill', gray)
+                .text(d => String(d).padStart(2, '0'))
+
+            // 折線圖
+            linesData.forEach((data, index) => {
+                const linesG = chart
+                    .append('g')
+                    .style('transform', `translateY(${h}px)`)
+                const length = data.length
+                const x1 = (d, i) => (w / length) * i + wd
+                const x2 = (d, i) => (w / length) * (i + 1) + wd
+                const y1 = (d, i) => -scaleY(i - 1 < 0 ? 0 : data[i - 1]) + wh
+                const y2 = d => -scaleY(d) + wh
+                const color = colors[index]
+                linesG
+                    .selectAll('line')
+                    .data(data)
+                    .enter()
+                    .append('line')
+                    .attr('x1', x1)
+                    .attr('x2', x1)
+                    .attr('y1', y1)
+                    .attr('y2', y1)
+                    .style('opacity', 0)
+                    .attr('stroke', color)
+                    .attr('stroke-width', 2)
+                    .transition()
+                    .ease(d3.easeLinear)
+                    .delay((d, i) => i * 300)
+                    .duration(600)
+                    .style('opacity', 1)
+                    .attr('x2', x2)
+                    .attr('y2', y2)
+
+                const linesHoverG = chart
+                    .append('g')
+                    .style('transform', `translateY(${h}px)`)
+                linesHoverG
+                    .selectAll('text')
+                    .data(data)
+                    .enter()
+                    .append('text')
+                    .attr('class', 'chart__hover-text')
+                    .attr('text-anchor', 'middle')
+                    .attr('x', -(h / 2))
+                    .attr('y', (d, i) => x2(d, i) * -1 + 16)
+                    .style('font-size', '14px')
+                    .style('font-weight', '900')
+                    .attr('fill', color)
+                    .attr('transform', 'rotate(90)')
+                    .style('opacity', 0)
+                    .style('transition', '.6s ease')
+                    .text(d => Math.ceil(d))
+                linesHoverG
+                    .selectAll('line')
+                    .data(data)
+                    .enter()
+                    .append('line')
+                    .attr('class', 'chart__hover-line')
+                    .attr('x1', x2)
+                    .attr('x2', x2)
+                    .attr('y1', 0)
+                    .attr('y2', h)
+                    .attr('stroke', gray)
+                    .attr('stroke-width', 1)
+                    .style('transform', `translateY(${-h + wh}px)`)
+                    .style('opacity', 0)
+                    .style('transition', '.6s ease')
+                linesHoverG
+                    .selectAll('circle')
+                    .data(data)
+                    .enter()
+                    .append('circle')
+                    .attr('class', 'chart__hover-circle')
+                    .attr('cx', x2)
+                    .attr('cy', y2)
+                    .attr('r', 4)
+                    .attr('fill', color)
+                    .style('opacity', 0)
+                    .style('transition', '.6s ease')
+                linesHoverG
+                    .selectAll('rect')
+                    .data(data)
+                    .enter()
+                    .append('rect')
+                    .attr('x', x1)
+                    .attr('y', 0)
+                    .attr('width', w / data.length)
+                    .attr('height', h + wh)
+                    .style('opacity', 0)
+                    .style('transform', `translateY(${-h + wh}px)`)
+                    .on('mouseenter', (d, i) => {
+                        const elName = ['text', 'circle', 'line']
+                        for (let index = 0; index < elName.length; index++) {
+                            document.getElementsByClassName(
+                                `chart__hover-${elName[index]}`,
+                            )[i].style.opacity = 1
+                        }
+                    })
+                    .on('mouseleave', (d, i) => {
+                        const elName = ['text', 'circle', 'line']
+                        for (let index = 0; index < elName.length; index++) {
+                            document.getElementsByClassName(
+                                `chart__hover-${elName[index]}`,
+                            )[i].style.opacity = 0
+                        }
+                    })
+            })
         },
     },
     watch: {
@@ -170,26 +405,11 @@ export default {
                 this.currentTipBadge = '週'
                 this.currentTipText = '本周 7 天'
                 this.listsDb
-                    .where(
-                        'createTime',
-                        '>=',
-                        new Date(
-                            `${new Date().getFullYear()}-${new Date().getMonth() +
-                                1}-${new Date().getDate() -
-                                (new Date().getDay() - 1)} 00:00:00`,
-                        ),
-                    )
-                    .where(
-                        'createTime',
-                        '<=',
-                        new Date(
-                            `${new Date().getFullYear()}-${new Date().getMonth() +
-                                1}-${new Date().getDate() +
-                                (7 - new Date().getDay())} 23:59:59`,
-                        ),
-                    )
-                    .get()
-                    .then(this.countPointNums)
+                    .orderByChild('createTime')
+                    .startAt(this.weekFirst())
+                    .endAt(this.weekLast())
+                    .once('value', this.countPointNums)
+                    .catch(err => console.log(err))
             }
         },
         selectedDetailVal(val) {
@@ -202,38 +422,42 @@ export default {
                 }
                 if (val.length < 3) {
                     this.listsDb
-                        .where(
-                            'createTime',
-                            '>=',
-                            new Date(
-                                `${new Date().getFullYear()}-${val}-1 00:00:00`,
+                        .orderByChild('createTime')
+                        .startAt(
+                            this.formatDate(
+                                new Date(
+                                    `${new Date().getFullYear()}-${val}-1 00:00:00`,
+                                ),
+                                'YY-MM-DD hh:mm:ss',
                             ),
                         )
-                        .where(
-                            'createTime',
-                            '<=',
-                            new Date(
-                                `${new Date().getFullYear()}-${val}-${
-                                    this.months[Number(val) - 1]
-                                } 23:59:59`,
+                        .endAt(
+                            this.formatDate(
+                                new Date(
+                                    `${new Date().getFullYear()}-${val}-${
+                                        this.months[Number(val) - 1]
+                                    } 23:59:59`,
+                                ),
+                                'YY-MM-DD hh:mm:ss',
                             ),
                         )
-                        .get()
-                        .then(this.countPointNums)
+                        .once('value', this.countPointNums)
                 } else {
                     this.listsDb
-                        .where(
-                            'createTime',
-                            '>=',
-                            new Date(`${val}-1-1 00:00:00`),
+                        .orderByChild('createTime')
+                        .startAt(
+                            this.formatDate(
+                                new Date(`${val}-1-1 00:00:00`),
+                                'YY-MM-DD hh:mm:ss',
+                            ),
                         )
-                        .where(
-                            'createTime',
-                            '<=',
-                            new Date(`${val}-12-31 23:59:59`),
+                        .endAt(
+                            this.formatDate(
+                                new Date(`${val}-12-31 23:59:59`),
+                                'YY-MM-DD hh:mm:ss',
+                            ),
                         )
-                        .get()
-                        .then(this.countPointNums)
+                        .once('value', this.countPointNums)
                 }
             }
         },
@@ -244,110 +468,7 @@ export default {
             this.userId = id
         })
     },
-    mounted() {
-        const datas = [
-            [100, 100, 75, 300, 142, 18, 0, 0, 0, 112, 200, 50],
-            [0, 0, 0, 112, 200, 50, 100, 100, 75, 300, 142, 18],
-            [15, 30, 65, 0, 0, 150, 20, 300, 15, 20, 140, 200],
-        ]
-        const colors = [
-            '#00C6D8',
-            '#512c96',
-            '#3c6f9c',
-            '#dd6892',
-            '#f9c6ba',
-            '#5edfff',
-            '#f0134d',
-            '#40bfc1',
-            '#3e64ff',
-            '#52de97',
-            '#8105d8',
-            '#fda77f',
-        ]
-        const grayLight = '#e6e6e6'
-        const grayLightTxt = '#e1e1e1'
-        const gray = '#bdbdbd'
-        const wd = 30
-        const wh = 10
-        const w = 250
-        const h = 200
-        const chart = d3.select('.chart')
-        let maxY = 0
-        datas.forEach(data => {
-            data.forEach(y => {
-                if (y > maxY) maxY = y
-            })
-        })
-        const scaleY = d3
-            .scaleLinear()
-            .range([0, h])
-            .domain([0, maxY])
-
-        // 水平線
-        const hozG = chart.append('g')
-        const hozData = []
-        const hozLen = 10
-        for (let i = 0; i < hozLen; i++) {
-            const val = maxY / (hozLen - 1)
-            if (i === 0) {
-                hozData.push(0)
-            } else {
-                hozData.push(hozData[i - 1] + val)
-            }
-        }
-        hozG.selectAll('text')
-            .data(hozData.sort((a, b) => b - a))
-            .enter()
-            .append('text')
-            .attr('x', 0)
-            .attr('y', (d, i) => (h / (hozLen - 1)) * i + 4 + wh)
-            .style('font-size', '12px')
-            .attr('fill', (d, i) => (i % 2 === 1 ? grayLightTxt : gray))
-            .text(d => ~~d)
-        hozG.selectAll('line')
-            .data(hozData)
-            .enter()
-            .append('line')
-            .attr('x1', wd)
-            .attr('x2', w + wd)
-            .attr('y1', (d, i) => (h / (hozLen - 1)) * i + wh)
-            .attr('y2', (d, i) => (h / (hozLen - 1)) * i + wh)
-            .attr('stroke', (d, i) => (i % 2 === 1 ? grayLight : gray))
-
-        // 月份
-        const months = Array.from(new Array(12), (d, i) => i + 1)
-        const verG = chart.append('g')
-        verG.selectAll('text')
-            .data(months)
-            .enter()
-            .append('text')
-            .attr(
-                'x',
-                (d, i) => (w / months.length) * i + w / months.length + wd - 6,
-            )
-            .attr('y', h + wh + 20)
-            .style('font-size', '12px')
-            .style('fill', gray)
-            .text(d => String(d).padStart(2, '0'))
-
-        // 折線圖
-        datas.forEach((data, index) => {
-            const linesG = chart
-                .append('g')
-                .style('transform', `translateY(${h}px)`)
-            linesG
-                .selectAll('line')
-                .data(data)
-                .enter()
-                .append('line')
-                .attr('x1', (d, i) => (w / data.length) * i + wd)
-                .attr('x2', (d, i) => (w / data.length) * (i + 1) + wd)
-                .attr('y1', (d, i) => -scaleY(i - 1 < 0 ? 0 : data[i - 1]) + wh)
-                .attr('y2', d => -scaleY(d) + wh)
-                .attr('stroke', colors[index])
-                .attr('stroke-width', 2)
-        })
-    },
+    mounted() {},
     // beforeDestroy() {},
 }
 </script>
