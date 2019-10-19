@@ -5,21 +5,10 @@ import AppComponent from './App/App.vue'
 import '@/assets/fontawesome/css/all.min.css'
 import '@/assets/libs/style.sass'
 import * as myFuncs from '@/assets/libs/my'
-import firebase from 'firebase/app'
-import 'firebase/auth'
-import 'firebase/database'
 
-const firebaseConfig = {
-    apiKey: 'AIzaSyCtx5J2x18iLlMIDURgMecmaVkfh6_OSeQ',
-    authDomain: 'pagemaker-23fec.firebaseapp.com',
-    databaseURL: 'https://pagemaker-23fec.firebaseio.com',
-    storageBucket: 'pagemaker-23fec.appspot.com',
-}
 const bg = chrome.extension.getBackgroundPage()
-const app = firebase.initializeApp(firebaseConfig)
-const auth = app.auth()
-const db = app.database()
-bg._app = app
+const auth = bg._DB.auth()
+const db = bg._DB.database()
 
 Vue.prototype.$bg = bg
 Vue.prototype.$auth = auth

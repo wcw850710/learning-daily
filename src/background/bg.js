@@ -1,4 +1,13 @@
-const listsDB = id => _app.database().ref('USERS/' + id + '/LISTS')
+const firebaseConfig = {
+    apiKey: 'AIzaSyCtx5J2x18iLlMIDURgMecmaVkfh6_OSeQ',
+    authDomain: 'pagemaker-23fec.firebaseapp.com',
+    databaseURL: 'https://pagemaker-23fec.firebaseio.com',
+    storageBucket: 'pagemaker-23fec.appspot.com',
+}
+
+var _DB = firebase.initializeApp(firebaseConfig)
+const listsDB = (id, afterRef = '') =>
+    _DB.database().ref('USERS/' + id + '/LISTS' + afterRef)
 
 function formatDate(time = new Date(), type = 'YY-MM-DD') {
     const year = time.getFullYear()
@@ -24,31 +33,33 @@ function tipNums(paramsId) {
         })
     }
     const runDb = id =>
-        listsDB(id)
-            .orderByChild(formatDate())
-            .startAt(0)
-            .endAt(1)
-            .on('value', snap => {
-                let length = 0
-                snap.forEach(doc => {
-                    const data = doc.val()
-                    if (data[formatDate()] === 0) {
-                        length++
+        listsDB(id).on('value', () => {
+            listsDB(id)
+                .orderByChild(formatDate())
+                .startAt(0)
+                .endAt(1)
+                .once('value', snap => {
+                    let length = 0
+                    snap.forEach(doc => {
+                        const data = doc.val()
+                        if (data[formatDate()] === 0) {
+                            length++
+                        }
+                    })
+                    if (length) {
+                        chrome.browserAction.setBadgeText({
+                            text: String(length),
+                        })
+                        chrome.browserAction.setBadgeBackgroundColor({
+                            color: '#FF663E',
+                        })
+                    } else {
+                        clearAction()
                     }
                 })
-                if (paramsId) return clearAction()
-                if (length) {
-                    chrome.browserAction.setBadgeText({
-                        text: String(length),
-                    })
-                    chrome.browserAction.setBadgeBackgroundColor({
-                        color: '#FF663E',
-                    })
-                } else {
-                    clearAction()
-                }
-            })
+        })
     if (paramsId) {
+        clearAction()
         return listsDB(paramsId).off('value')
     }
     chrome.storage.local.get('id', result => {
@@ -60,27 +71,24 @@ function tipNums(paramsId) {
 function pushLinesFetchData(url, lineData, windowWidth) {
     chrome.storage.local.get('id', result => {
         const id = result.id
-        const DB = listsDB(username)
-        DB.where('url', '==', url)
-            .where('color', '==', $color)
-            .get()
-            .then(querySnapshot => {
-                querySnapshot.forEach(doc => {
-                    const { width, lines } = doc.data()
-                    const id = doc.id
+        listsDB(id)
+            .orderByChild('url')
+            .equalTo(url)
+            .once('value', snap => {
+                snap.forEach(doc => {
+                    const { width, lines, color } = doc.val()
+                    if (color !== $color) return
                     if (!width) {
-                        DB.doc(id).update({
+                        listsDB(id, `/${doc.key}`).update({
                             width: windowWidth,
                         })
                     }
                     if (lines) {
-                        DB.doc(id).update({
+                        listsDB(id, `/${doc.key}`).update({
                             lines: [...lines, lineData],
                         })
                     } else {
-                        DB.doc(id).update({
-                            lines: [lineData],
-                        })
+                        listsDB(id, `/${doc.key}/lines`).set([lineData])
                     }
                 })
             })
@@ -90,21 +98,20 @@ function pushLinesFetchData(url, lineData, windowWidth) {
 function removeLinesFetchData(url, lineData, sendRes) {
     chrome.storage.local.get('id', result => {
         const id = result.id
-        const DB = listsDB(username)
-        DB.where('url', '==', url)
-            .get()
-            .then(querySnapshot => {
-                querySnapshot.forEach(doc => {
-                    const { lines } = doc.data()
+        const DB = listsDB(id)
+        DB.orderByChild('url')
+            .equalTo(url)
+            .once('value', snap => {
+                snap.forEach(doc => {
+                    const { lines } = doc.val()
                     const index = lines.findIndex(
                         line => line.x === lineData.x && line.y === lineData.y,
                     )
                     if (index === -1) return
 
                     lines.splice(index, 1)
-                    const id = doc.id
                     const newLines = lines
-                    DB.doc(id)
+                    listsDB(id, `/${doc.key}`)
                         .update({
                             lines: newLines,
                         })
@@ -117,14 +124,14 @@ function removeLinesFetchData(url, lineData, sendRes) {
 function toggleLinesFetchData(url, sendRes) {
     chrome.storage.local.get('id', result => {
         const id = result.id
-        const DB = listsDB(username)
-        DB.where('url', '==', url)
-            .get()
-            .then(querySnapshot => {
-                if (querySnapshot.empty) return alert('此連結尚未有重點')
+        const DB = listsDB(id)
+        DB.orderByChild('url')
+            .equalTo(url)
+            .once('value', snap => {
+                if (!snap.exists()) return alert('此連結尚未有重點')
                 const linesData = []
-                querySnapshot.forEach(doc => {
-                    const { lines, color } = doc.data()
+                snap.forEach(doc => {
+                    const { lines, color } = doc.val()
                     if (lines)
                         lines.forEach(line =>
                             linesData.push({
@@ -165,7 +172,7 @@ chrome.commands.onCommand.addListener(async command => {
     const isLogin = await new Promise((res, rej) =>
         chrome.storage.local.get('id', result => {
             const id = result.id
-            if (!username) res(false)
+            if (!id) res(false)
             else res(true)
         }),
     )
@@ -202,11 +209,11 @@ chrome.commands.onCommand.addListener(async command => {
 
     chrome.storage.local.get('id', result => {
         const id = result.id
-        listsDB(username)
-            .where('url', '==', url)
-            .get()
-            .then(querySnapshot => {
-                if (!querySnapshot.empty) {
+        listsDB(id)
+            .orderByChild('url')
+            .equalTo(url)
+            .once('value', snap => {
+                if (snap.exists()) {
                     switch (command) {
                         case 'pen':
                             chrome.tabs.executeScript(null, {

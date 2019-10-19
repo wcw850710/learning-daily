@@ -43,7 +43,12 @@
         <button
             class="login__submit"
             @click="login"
+            v-if="!isLoginLoading"
         >登入</button>
+        <button
+            class="login__submit"
+            v-else
+        ><i class="login__submit__spin"></i></button>
     </main>
 </template>
 <script>
@@ -57,6 +62,7 @@ export default {
             username: '',
             password: '',
             fightingWord: '',
+            isLoginLoading: false,
         }
     },
     props: {},
@@ -122,7 +128,7 @@ export default {
             const loginRef = this.$refs.loginRef
             if (!this.username) return this.$my.alert(loginRef, '帳號不能為空')
             if (!this.password) return this.$my.alert(loginRef, '密碼不能為空')
-
+            this.isLoginLoading = true
             this.usersDB
                 .orderByChild('username')
                 .equalTo(this.username)
@@ -146,10 +152,10 @@ export default {
                                             })
                                             .then(() => {
                                                 if (
-                                                    !this.fightingWord ||
+                                                    this.fightingWord &&
                                                     this.fightingWord !==
                                                         fighting_word
-                                                )
+                                                ) {
                                                     this.$db
                                                         .ref('USERS/' + key)
                                                         .update({
@@ -160,17 +166,24 @@ export default {
                                                             this.chromeStorageSet(
                                                                 key,
                                                                 this
-                                                                    .fightingWord ||
-                                                                    fighting_word,
+                                                                    .fightingWord,
                                                                 width,
                                                             ),
                                                         )
+                                                } else {
+                                                    this.chromeStorageSet(
+                                                        key,
+                                                        fighting_word,
+                                                        width,
+                                                    )
+                                                }
                                             })
                                     }),
                                 )
-                                .catch(() =>
-                                    this.$my.alert(loginRef, '帳號或密碼錯誤'),
-                                )
+                                .catch(() => {
+                                    this.isLoginLoading = false
+                                    this.$my.alert(loginRef, '帳號或密碼錯誤')
+                                })
                         })
                     }
                 })

@@ -423,7 +423,7 @@ export default {
                         })
                         const newLists = lists.sort(
                             (a, b) =>
-                                a.createTime.seconds - b.createTime.seconds,
+                                new Date(a.createTime) - new Date(b.createTime),
                         )
                         this.lists = newLists
                         this.fetchImportantNums()
@@ -504,7 +504,7 @@ export default {
         },
         setData() {
             this.tabsQuery(tabs => {
-                const url = tabs[0].url
+                const { url } = tabs[0]
                 if (url) {
                     if (!this.createListName)
                         return this.$my.alert(this.$refs.mainRef, '請輸入名字')
