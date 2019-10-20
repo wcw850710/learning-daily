@@ -1,19 +1,10 @@
 @import '../style/var'
 
-=wrapper
-    width: calc(100% - 30px)
-    margin: 0 auto
-
 .root
     width: 100%
 
 .go-home
-    cursor: pointer
-    transition: 0.6s ease
-    &:hover
-        opacity: 0.7
-    &__icon
-        margin-right: 6px
+    +goHome
 
 .control
     display: flex

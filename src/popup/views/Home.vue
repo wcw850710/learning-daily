@@ -226,9 +226,16 @@
                     </div>
                     <div
                         class="footer__list__btn-main__modal__list"
+                        @click="goToProfile"
+                    ><i class="footer__list__btn-main__modal__list__icon fas fa-user"></i><span class="footer__list__btn-main__modal__list__name">個人資訊</span></div>
+                    <div
+                        class="footer__list__btn-main__modal__list"
                         @click="goToChart"
-                    ><i class="footer__list__btn-main__modal__list__icon fas fa-chart-bar"></i><span class="footer__list__btn-main__modal__list__name">數據</span></div>
-                    <div class="footer__list__btn-main__modal__list"><i class="footer__list__btn-main__modal__list__icon fas fa-question-circle"></i><span class="footer__list__btn-main__modal__list__name">說明</span></div>
+                    ><i class="footer__list__btn-main__modal__list__icon fas fa-chart-bar"></i><span class="footer__list__btn-main__modal__list__name">數據圖表</span></div>
+                    <div
+                        class="footer__list__btn-main__modal__list"
+                        @click="goToExplanation"
+                    ><i class="footer__list__btn-main__modal__list__icon fas fa-question-circle"></i><span class="footer__list__btn-main__modal__list__name">功能說明</span></div>
                 </div>
             </div>
             <div class="footer__list">
@@ -241,7 +248,10 @@
                     新增
                 </span>
             </div>
-            <div class="footer__list">
+            <div
+                class="footer__list"
+                :class="{'footer__list--noweb': !hasWeb}"
+            >
                 <button
                     class="footer__list__btn footer__list__btn-delete"
                     @dblclick="deleteData"
@@ -628,6 +638,12 @@ export default {
         },
         goToChart() {
             this.$router.push('/chart')
+        },
+        goToProfile() {
+            this.$router.push('/user-profile')
+        },
+        goToExplanation() {
+            this.$router.push('/explanation')
         },
         pointClickChangeColor(color) {
             this.tabsQuery(tabs => {

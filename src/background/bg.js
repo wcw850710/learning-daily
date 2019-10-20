@@ -104,6 +104,7 @@ function removeLinesFetchData(url, lineData, sendRes) {
             .once('value', snap => {
                 snap.forEach(doc => {
                     const { lines } = doc.val()
+                    if (!lines) return
                     const index = lines.findIndex(
                         line => line.x === lineData.x && line.y === lineData.y,
                     )

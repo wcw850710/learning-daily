@@ -54,7 +54,6 @@
 <script>
 import crypto from 'crypto'
 import Modal from '../components/Modal'
-import uuid from 'uuid/v4'
 
 export default {
     data() {

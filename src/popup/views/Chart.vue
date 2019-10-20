@@ -214,6 +214,40 @@ export default {
         },
         countYearPointNums(snap) {
             if (!this.snapEmpty(snap, 12)) return
+            const linesObj = {}
+            let pointNums = 0
+            let docNums = 0
+            for (let i = 0; i < 12; i++) {
+                const date = this.formatDate(
+                    new Date(
+                        `${this.selectedDetailVal}-${String(i + 1).padStart(
+                            2,
+                            '0',
+                        )}-01 00:00:00`,
+                    ),
+                )
+                linesObj[date] = 0
+            }
+            snap.forEach(doc => {
+                const { createTime, lines } = doc.val()
+                pointNums += lines ? lines.length : 0
+                docNums++
+                for (let key in linesObj) {
+                    const month = new Date(key).getMonth() + 1
+                    const current = new Date(createTime).getMonth() + 1
+                    if (current === month) {
+                        linesObj[key] += lines.length
+                        break
+                    }
+                }
+            })
+            this.pointNums = pointNums
+            this.docNums = docNums
+            const linesData = []
+            for (let key in linesObj) {
+                linesData.push(linesObj[key])
+            }
+            this.drawChart(linesData)
         },
         countWeekPointNums(snap) {
             if (!this.snapEmpty(snap, 7)) return
@@ -594,6 +628,7 @@ export default {
         chrome.storage.local.get('id', result => {
             const { id } = result
             this.userId = id
+            this.selectedRangeVal = 'week'
         })
     },
     mounted() {},

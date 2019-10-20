@@ -11,9 +11,6 @@
         transform: translate(-50%, 0)
 
 .my__alert
-    color: $red
-    background: #ffe4e4
-    border: 1px solid #ecc4c4
     font-size: 13px
     width: 222px
     margin-bottom: 10px
@@ -25,3 +22,11 @@
     transform: translateX(-50%)
     animation: fade-slider-in 3s ease forwards
     z-index: 1000
+    &--success
+        color: #23bf23
+        background: #ddffdd
+        border: 1px solid #c8f1c8
+    &--danger
+        color: $red
+        background: #ffe4e4
+        border: 1px solid #ecc4c4
