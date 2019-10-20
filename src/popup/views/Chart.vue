@@ -78,7 +78,6 @@ export default {
             currentTipBadge: '',
             currentTipText: '',
             userId: '',
-            months: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
         }
     },
     // props: {},
@@ -98,9 +97,13 @@ export default {
                 this.formatDate(
                     new Date(
                         `${new Date().getFullYear()}-${new Date().getMonth() +
-                            1}-${new Date().getDate() -
-                            new Date().getDay() -
-                            5} 00:00:00`,
+                            1}-${new Date(
+                            new Date().getTime() -
+                                86400000 *
+                                    (new Date().getDay() === 0
+                                        ? 6
+                                        : new Date().getDay()),
+                        ).getDate()} 00:00:00`,
                     ),
                     type,
                 )
@@ -110,8 +113,13 @@ export default {
                 this.formatDate(
                     new Date(
                         `${new Date().getFullYear()}-${new Date().getMonth() +
-                            1}-${new Date().getDate() +
-                            (7 - new Date().getDay())} 23:59:59`,
+                            1}-${new Date(
+                            new Date().getTime() +
+                                86400000 *
+                                    (new Date().getDay() === 0
+                                        ? 0
+                                        : 7 - new Date().getDay()),
+                        ).getDate()} 00:00:00`,
                     ),
                     type,
                 )
@@ -124,43 +132,121 @@ export default {
         goToHome() {
             this.$router.push('/')
         },
-        countPointNums(snap) {
+        snapEmpty(snap, len, paramDays) {
             if (!snap.exists()) {
                 this.pointNums = 0
                 this.docNums = 0
-            } else {
-                const linesObj = {}
-                let pointNums = 0
-                let docNums = 0
-                const firstDay = this.weekFirst('YY-MM-DD')
-                for (let i = 0; i < 7; i++) {
-                    const date = this.formatDate(
-                        new Date(new Date(firstDay).getTime() + 86400000 * i),
-                    )
-                    linesObj[date] = 0
-                }
-                snap.forEach(doc => {
-                    const { createTime, lines } = doc.val()
-                    pointNums += lines ? lines.length : 0
-                    docNums++
-                    linesObj[createTime.split(' ')[0]] += lines.length
-                })
-                this.pointNums = pointNums
-                this.docNums = docNums
-                const linesData = []
-                for (let key in linesObj) {
-                    linesData.push(linesObj[key])
-                }
-                this.drawChart([linesData])
+                this.drawChart(Array.from(new Array(len), () => 0), paramDays)
+                return false
             }
+            return true
         },
-        drawChart(
-            linesData = [
-                [100, 100, 75, 300, 142, 18, 0, 0, 0, 112, 200, 50],
-                [0, 0, 0, 112, 200, 50, 100, 100, 75, 300, 142, 18],
-                [15, 30, 65, 0, 0, 150, 20, 300, 15, 20, 140, 200],
-            ],
-        ) {
+        countMonthPointNums(snap) {
+            const range = val => {
+                const numCurrent = Number(this.selectedDetailVal)
+                const lastDate = new Date(
+                    new Date(
+                        `${
+                            numCurrent + 1 === 13
+                                ? new Date().getFullYear() + 1
+                                : new Date().getFullYear()
+                        }-${numCurrent + 1 === 13 ? 1 : numCurrent + 1}-1`,
+                    ).getTime() - 86400000,
+                ).getDate()
+                if (val >= lastDate - 1) return lastDate
+                return val
+            }
+            const days = []
+            for (let i = 0; i < 10; i++) {
+                days.push(range((i + 1) * 3))
+            }
+
+            if (!this.snapEmpty(snap, 10, days)) return
+
+            const linesObj = {}
+            let pointNums = 0
+            let docNums = 0
+            const firstDay = this.formatDate(
+                new Date(
+                    `${new Date().getFullYear()}-${this.selectedDetailVal}-1`,
+                ),
+            )
+            for (let i = 0; i < 10; i++) {
+                const date = this.formatDate(
+                    new Date(
+                        new Date(firstDay).getTime() +
+                            86400000 * range((i + 1) * 3),
+                    ),
+                )
+                linesObj[date] = 0
+            }
+            snap.forEach(doc => {
+                const { createTime, lines } = doc.val()
+                pointNums += lines ? lines.length : 0
+                docNums++
+                const current = Number(createTime.split(' ')[0].substr(-2))
+                for (let key in linesObj) {
+                    if (key.substr(-2) === '04') {
+                        const max = Number(key.substr(-2))
+                        const min = 1
+                        if (current >= min && current <= max) {
+                            linesObj[key] += lines.length
+                            break
+                        }
+                    } else {
+                        const date = key.substr(-2)
+                        const max = Number(date)
+                        const min = Number(date) - 3
+                        if (current >= min && current <= max) {
+                            linesObj[key] += lines.length
+                            break
+                        }
+                    }
+                }
+            })
+            this.pointNums = pointNums
+            this.docNums = docNums
+            const linesData = []
+            for (let key in linesObj) {
+                linesData.push(linesObj[key])
+            }
+            this.drawChart(linesData, days)
+        },
+        countYearPointNums(snap) {
+            if (!this.snapEmpty(snap, 12)) return
+        },
+        countWeekPointNums(snap) {
+            if (!this.snapEmpty(snap, 7)) return
+            const linesObj = {}
+            let pointNums = 0
+            let docNums = 0
+            const firstDay = this.weekFirst('YY-MM-DD')
+            for (let i = 0; i < 7; i++) {
+                const date = this.formatDate(
+                    new Date(new Date(firstDay).getTime() + 86400000 * i),
+                )
+                linesObj[date] = 0
+            }
+            snap.forEach(doc => {
+                const { createTime, lines } = doc.val()
+                pointNums += lines ? lines.length : 0
+                docNums++
+                linesObj[createTime.split(' ')[0]] += lines.length
+            })
+            this.pointNums = pointNums
+            this.docNums = docNums
+            const linesData = []
+            for (let key in linesObj) {
+                linesData.push(linesObj[key])
+            }
+            this.drawChart(linesData)
+        },
+        drawChart(linesData = [], paramDays) {
+            const clearChart = (self => {
+                const chart = self.$refs.chartRef
+                ;[...chart.children].forEach(el => chart.removeChild(el))
+            })(this)
+
             const colors = [
                 '#00C6D8',
                 '#512c96',
@@ -188,10 +274,10 @@ export default {
             // }
             // this.$refs.chartRef.addEventListener(`mousemove`, handleMouseMove)
             let maxY = 0
-            linesData.forEach(data => {
-                data.forEach(y => {
-                    if (y > maxY) maxY = y
-                })
+            linesData.forEach(y => {
+                // data.forEach(y => {
+                if (y > maxY) maxY = y
+                // })
             })
             const scaleY = d3
                 .scaleLinear()
@@ -229,20 +315,21 @@ export default {
                 .attr('y2', (d, i) => (h / (hozLen - 1)) * i + wh)
                 .attr('stroke', (d, i) => (i % 2 === 1 ? grayLight : gray))
 
-            // 月份
-            const months = Array.from(
-                new Array(linesData[0].length),
-                (d, i) => i + 1,
-            )
+            // 時間
+            const days =
+                paramDays ||
+                Array.from(
+                    new Array(linesData.length /*linesData[0].length*/),
+                    (d, i) => i + 1,
+                )
             const verG = chart.append('g')
             verG.selectAll('text')
-                .data(months)
+                .data(days)
                 .enter()
                 .append('text')
                 .attr(
                     'x',
-                    (d, i) =>
-                        (w / months.length) * i + w / months.length + wd - 6,
+                    (d, i) => (w / days.length) * i + w / days.length + wd - 6,
                 )
                 .attr('y', h + wh + 20)
                 .style('font-size', '12px')
@@ -250,110 +337,146 @@ export default {
                 .text(d => String(d).padStart(2, '0'))
 
             // 折線圖
-            linesData.forEach((data, index) => {
-                const linesG = chart
-                    .append('g')
-                    .style('transform', `translateY(${h}px)`)
-                const length = data.length
-                const x1 = (d, i) => (w / length) * i + wd
-                const x2 = (d, i) => (w / length) * (i + 1) + wd
-                const y1 = (d, i) => -scaleY(i - 1 < 0 ? 0 : data[i - 1]) + wh
-                const y2 = d => -scaleY(d) + wh
-                const color = colors[index]
-                linesG
-                    .selectAll('line')
-                    .data(data)
-                    .enter()
-                    .append('line')
-                    .attr('x1', x1)
-                    .attr('x2', x1)
-                    .attr('y1', y1)
-                    .attr('y2', y1)
-                    .style('opacity', 0)
-                    .attr('stroke', color)
-                    .attr('stroke-width', 2)
-                    .transition()
-                    .ease(d3.easeLinear)
-                    .delay((d, i) => i * 300)
-                    .duration(600)
-                    .style('opacity', 1)
-                    .attr('x2', x2)
-                    .attr('y2', y2)
+            // linesData.forEach((data, index) => {
+            const linesG = chart
+                .append('g')
+                .style('transform', `translateY(${h}px)`)
+            const length = linesData.length
+            const x1 = (d, i) => (w / length) * i + wd
+            const x2 = (d, i) => (w / length) * (i + 1) + wd
+            const y1 = (d, i) => -scaleY(i - 1 < 0 ? 0 : linesData[i - 1]) + wh
+            const y2 = d => -scaleY(d) + wh
+            const color = colors[0] /*colors[0]*/
+            linesG
+                .selectAll('line')
+                .data(linesData)
+                .enter()
+                .append('line')
+                .attr('class', 'chart__hover-main-line')
+                .attr('x1', x1)
+                .attr('x2', x1)
+                .attr('y1', y1)
+                .attr('y2', y1)
+                .style('opacity', 0)
+                .attr('stroke', color)
+                .attr('stroke-width', 2)
+                .style('transition', 'stroke .6s ease')
+                .transition()
+                .ease(d3.easeLinear)
+                .delay((d, i) => i * 200)
+                .duration(200)
+                .style('opacity', 1)
+                .attr('x2', x2)
+                .attr('y2', y2)
 
-                const linesHoverG = chart
-                    .append('g')
-                    .style('transform', `translateY(${h}px)`)
-                linesHoverG
-                    .selectAll('text')
-                    .data(data)
-                    .enter()
-                    .append('text')
-                    .attr('class', 'chart__hover-text')
-                    .attr('text-anchor', 'middle')
-                    .attr('x', -(h / 2))
-                    .attr('y', (d, i) => x2(d, i) * -1 + 16)
-                    .style('font-size', '14px')
-                    .style('font-weight', '900')
-                    .attr('fill', color)
-                    .attr('transform', 'rotate(90)')
-                    .style('opacity', 0)
-                    .style('transition', '.6s ease')
-                    .text(d => Math.ceil(d))
-                linesHoverG
-                    .selectAll('line')
-                    .data(data)
-                    .enter()
-                    .append('line')
-                    .attr('class', 'chart__hover-line')
-                    .attr('x1', x2)
-                    .attr('x2', x2)
-                    .attr('y1', 0)
-                    .attr('y2', h)
-                    .attr('stroke', gray)
-                    .attr('stroke-width', 1)
-                    .style('transform', `translateY(${-h + wh}px)`)
-                    .style('opacity', 0)
-                    .style('transition', '.6s ease')
-                linesHoverG
-                    .selectAll('circle')
-                    .data(data)
-                    .enter()
-                    .append('circle')
-                    .attr('class', 'chart__hover-circle')
-                    .attr('cx', x2)
-                    .attr('cy', y2)
-                    .attr('r', 4)
-                    .attr('fill', color)
-                    .style('opacity', 0)
-                    .style('transition', '.6s ease')
-                linesHoverG
-                    .selectAll('rect')
-                    .data(data)
-                    .enter()
-                    .append('rect')
-                    .attr('x', x1)
-                    .attr('y', 0)
-                    .attr('width', w / data.length)
-                    .attr('height', h + wh)
-                    .style('opacity', 0)
-                    .style('transform', `translateY(${-h + wh}px)`)
-                    .on('mouseenter', (d, i) => {
-                        const elName = ['text', 'circle', 'line']
-                        for (let index = 0; index < elName.length; index++) {
-                            document.getElementsByClassName(
-                                `chart__hover-${elName[index]}`,
-                            )[i].style.opacity = 1
+            const linesHoverG = chart
+                .append('g')
+                .style('transform', `translateY(${h}px)`)
+            linesHoverG
+                .selectAll('text')
+                .data(linesData)
+                .enter()
+                .append('text')
+                .attr('class', 'chart__hover-text')
+                .attr('text-anchor', 'middle')
+                .attr('x', -(h / 2))
+                .attr('y', (d, i) => x2(d, i) * -1 + 16)
+                .style('font-size', '14px')
+                .style('font-weight', '900')
+                .attr('fill', color)
+                .attr('transform', 'rotate(90)')
+                .style('opacity', 0)
+                .style('transition', 'opacity .6s ease')
+                .style('font-family', '微軟正黑體')
+                .text(d => Math.ceil(d))
+            linesHoverG
+                .selectAll('line')
+                .data(linesData)
+                .enter()
+                .append('line')
+                .attr('class', 'chart__hover-line')
+                .attr('x1', x2)
+                .attr('x2', x2)
+                .attr('y1', 0)
+                .attr('y2', h)
+                .attr('stroke', gray)
+                .attr('stroke-width', 1)
+                .style('transform', `translateY(${-h + wh}px)`)
+                .style('opacity', 0)
+                .style('transition', 'opacity .6s ease')
+            linesHoverG
+                .selectAll('circle')
+                .data(linesData)
+                .enter()
+                .append('circle')
+                .attr('class', 'chart__hover-circle')
+                .attr('cx', x2)
+                .attr('cy', y2)
+                .attr('r', 4)
+                .attr('fill', color)
+                .style('opacity', 0)
+                .style('transition', 'opacity .6s ease')
+            linesHoverG
+                .selectAll('rect')
+                .data(linesData)
+                .enter()
+                .append('rect')
+                .attr('x', x1)
+                .attr('y', 0)
+                .attr('width', w / linesData.length)
+                .attr('height', h + wh)
+                .style('opacity', 0)
+                .style('transform', `translateY(${-h + wh}px)`)
+                .on('mouseenter', (d, i) => {
+                    const elName = ['text', 'circle', 'line']
+                    for (let index = 0; index < elName.length; index++) {
+                        document.getElementsByClassName(
+                            `chart__hover-${elName[index]}`,
+                        )[i].style.opacity = 1
+                    }
+                    ;[
+                        ...document.getElementsByClassName(
+                            `chart__hover-main-line`,
+                        ),
+                    ].forEach((el, index) => {
+                        if (index !== i) {
+                            el.setAttribute('stroke', '#c0ebef')
                         }
                     })
-                    .on('mouseleave', (d, i) => {
-                        const elName = ['text', 'circle', 'line']
-                        for (let index = 0; index < elName.length; index++) {
-                            document.getElementsByClassName(
-                                `chart__hover-${elName[index]}`,
-                            )[i].style.opacity = 0
-                        }
+                })
+                .on('mouseleave', (d, i) => {
+                    const elName = ['text', 'circle', 'line']
+                    for (let index = 0; index < elName.length; index++) {
+                        document.getElementsByClassName(
+                            `chart__hover-${elName[index]}`,
+                        )[i].style.opacity = 0
+                    }
+                    ;[
+                        ...document.getElementsByClassName(
+                            `chart__hover-main-line`,
+                        ),
+                    ].forEach((el, index) => {
+                        el.setAttribute('stroke', color)
                     })
-            })
+                })
+            // })
+
+            // 初始顯示條
+            chart
+                .append('line')
+                .style('transform', `translateY(${h}px)`)
+                .attr('x1', wd)
+                .attr('x2', wd)
+                .attr('y1', wh)
+                .attr('y2', -(h + wh))
+                .attr('stroke', color)
+                .attr('stroke-width', 2)
+                .transition()
+                .ease(d3.easeLinear)
+                .duration(200 * linesData.length)
+                .attr('x1', wd + w)
+                .attr('x2', wd + w)
+                .style('opacity', 0)
         },
     },
     watch: {
@@ -408,8 +531,7 @@ export default {
                     .orderByChild('createTime')
                     .startAt(this.weekFirst())
                     .endAt(this.weekLast())
-                    .once('value', this.countPointNums)
-                    .catch(err => console.log(err))
+                    .once('value', this.countWeekPointNums)
             }
         },
         selectedDetailVal(val) {
@@ -434,14 +556,20 @@ export default {
                         .endAt(
                             this.formatDate(
                                 new Date(
-                                    `${new Date().getFullYear()}-${val}-${
-                                        this.months[Number(val) - 1]
-                                    } 23:59:59`,
+                                    new Date(
+                                        `${
+                                            val * 1 + 1 === 13
+                                                ? new Date().getFullYear() + 1
+                                                : new Date().getFullYear()
+                                        }-${
+                                            val * 1 + 1 === 13 ? 1 : val * 1 + 1
+                                        }-1 23:59:59`,
+                                    ).getTime() - 86400000,
                                 ),
                                 'YY-MM-DD hh:mm:ss',
                             ),
                         )
-                        .once('value', this.countPointNums)
+                        .once('value', this.countMonthPointNums)
                 } else {
                     this.listsDb
                         .orderByChild('createTime')
@@ -457,7 +585,7 @@ export default {
                                 'YY-MM-DD hh:mm:ss',
                             ),
                         )
-                        .once('value', this.countPointNums)
+                        .once('value', this.countYearPointNums)
                 }
             }
         },

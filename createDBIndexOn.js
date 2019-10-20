@@ -9,7 +9,7 @@ function formatDate(time = new Date()) {
 function recentSevenDays() {
     let days = []
     const day = 86400000
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 7 + 7; i++) {
         days.push(formatDate(new Date(new Date().getTime() + day * (i - 3))))
     }
     return JSON.stringify(days).replace(/[\[\]]/g, '')
@@ -23,4 +23,4 @@ function recentSevenDays() {
 //     return hash
 // }
 
-console.log(recentSevenDays)
+// console.log(recentSevenDays())
