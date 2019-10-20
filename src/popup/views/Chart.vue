@@ -182,7 +182,8 @@ export default {
             }
             snap.forEach(doc => {
                 const { createTime, lines } = doc.val()
-                pointNums += lines ? lines.length : 0
+                const linesLength = lines ? lines.length : 0
+                pointNums += linesLength
                 docNums++
                 const current = Number(createTime.split(' ')[0].substr(-2))
                 for (let key in linesObj) {
@@ -190,7 +191,7 @@ export default {
                         const max = Number(key.substr(-2))
                         const min = 1
                         if (current >= min && current <= max) {
-                            linesObj[key] += lines.length
+                            linesObj[key] += linesLength
                             break
                         }
                     } else {
@@ -198,7 +199,7 @@ export default {
                         const max = Number(date)
                         const min = Number(date) - 3
                         if (current >= min && current <= max) {
-                            linesObj[key] += lines.length
+                            linesObj[key] += linesLength
                             break
                         }
                     }
@@ -230,13 +231,14 @@ export default {
             }
             snap.forEach(doc => {
                 const { createTime, lines } = doc.val()
-                pointNums += lines ? lines.length : 0
+                const linesLength = lines ? lines.length : 0
+                pointNums += linesLength
                 docNums++
                 for (let key in linesObj) {
                     const month = new Date(key).getMonth() + 1
                     const current = new Date(createTime).getMonth() + 1
                     if (current === month) {
-                        linesObj[key] += lines.length
+                        linesObj[key] += linesLength
                         break
                     }
                 }
@@ -263,9 +265,10 @@ export default {
             }
             snap.forEach(doc => {
                 const { createTime, lines } = doc.val()
-                pointNums += lines ? lines.length : 0
+                const linesLength = lines ? lines.length : 0
+                pointNums += linesLength
                 docNums++
-                linesObj[createTime.split(' ')[0]] += lines.length
+                linesObj[createTime.split(' ')[0]] += linesLength
             })
             this.pointNums = pointNums
             this.docNums = docNums
