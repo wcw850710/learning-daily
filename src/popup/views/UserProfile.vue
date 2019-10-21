@@ -141,6 +141,7 @@ export default {
                     this._userDB
                         .update({
                             password: this.hash(this.newPassword),
+                            uid: this.$auth.currentUser.uid,
                         })
                         .then(() => {
                             initPassword()
@@ -152,7 +153,7 @@ export default {
                         })
                 })
                 .catch(err => {
-                    initPassword()
+                    this.isChangeLoading = false
                     this.$my.alert(this.$refs.mainRef, '舊密碼錯誤')
                 })
         },
