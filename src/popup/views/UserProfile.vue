@@ -128,6 +128,12 @@ export default {
                 return this.$my.alert(this.$refs.mainRef, '新密碼請相同')
 
             this.isChangeLoading = true
+            const initPassword = () => {
+                this.isChangeLoading = false
+                this.password = ''
+                this.newPassword = ''
+                this.checkNewPassword = ''
+            }
             this.userDB
                 .orderByChild('password')
                 .equalTo(this.hash())
@@ -137,7 +143,7 @@ export default {
                             password: this.hash(this.newPassword),
                         })
                         .then(() => {
-                            this.isChangeLoading = false
+                            initPassword()
                             this.$my.alert(
                                 this.$refs.mainRef,
                                 '密碼變更成功',
@@ -145,7 +151,10 @@ export default {
                             )
                         })
                 })
-                .catch(err => this.$my.alert(this.$refs.mainRef, '密碼錯誤'))
+                .catch(err => {
+                    initPassword()
+                    this.$my.alert(this.$refs.mainRef, '舊密碼錯誤')
+                })
         },
     },
     // watch: {},

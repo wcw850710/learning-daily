@@ -438,6 +438,11 @@ export default {
                         this.lists = newLists
                         this.fetchImportantNums()
                     })
+                    .catch(err => {
+                        if (/permission/.test(err)) {
+                            this.$bg.logout(() => this.$router.push('/login'))
+                        }
+                    })
             })
         },
         showFirstLoginModal() {

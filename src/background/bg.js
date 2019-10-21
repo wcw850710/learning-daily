@@ -26,6 +26,23 @@ function formatDate(time = new Date(), type = 'YY-MM-DD') {
     }
 }
 
+function logout(callback) {
+    const auth = _DB.auth()
+    const user = auth.currentUser
+    auth.signOut().then(() => {
+        chrome.storage.local.get('id', result => {
+            tipNums(result.id)
+            chrome.storage.local.remove('id', () => {
+                $firstLogin = true
+                $width = 0
+                chrome.storage.local.remove('width')
+                callback()
+                user.delete()
+            })
+        })
+    })
+}
+
 function tipNums(paramsId) {
     const clearAction = () => {
         chrome.browserAction.setBadgeText({
