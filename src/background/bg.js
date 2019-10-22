@@ -19,9 +19,9 @@ function formatDate(time = new Date(), type = 'YY-MM-DD') {
         case 'YY-MM':
             return `${year}-${month}`
         case 'YY-MM-DD hh:mm:ss':
-            const hour = String(new Date().getHours()).padStart(2, '0')
-            const minute = String(new Date().getMinutes()).padStart(2, '0')
-            const second = String(new Date().getSeconds()).padStart(2, '0')
+            const hour = String(time.getHours()).padStart(2, '0')
+            const minute = String(time.getMinutes()).padStart(2, '0')
+            const second = String(time.getSeconds()).padStart(2, '0')
             return `${year}-${month}-${date} ${hour}:${minute}:${second}`
     }
 }
