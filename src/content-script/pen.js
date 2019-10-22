@@ -73,12 +73,13 @@
             })
             canvas.addEventListener('mouseup', () => {
                 isDown = false
+                if (sentData.width < 3) sentData.width = 3
+                body.removeChild(canvas)
                 chrome.runtime.sendMessage({
                     mode: 'sendLine',
                     data: sentData,
                     windowWidth: window.innerWidth,
                 })
-                body.removeChild(canvas)
                 const pens = [
                     ...document.body.getElementsByClassName('my-important-pen'),
                 ]

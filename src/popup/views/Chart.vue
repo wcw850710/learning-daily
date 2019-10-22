@@ -102,7 +102,7 @@ export default {
                                 86400000 *
                                     (new Date().getDay() === 0
                                         ? 6
-                                        : new Date().getDay()),
+                                        : new Date().getDay() - 1),
                         ).getDate()} 00:00:00`,
                     ),
                     type,
