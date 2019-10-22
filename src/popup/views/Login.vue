@@ -147,7 +147,7 @@ export default {
                                         this.$db
                                             .ref('_USERS/' + key)
                                             .update({
-                                                // password: this.hash(),
+                                                password: this.hash(),
                                                 uid: user.user.uid,
                                             })
                                             .then(() => {
