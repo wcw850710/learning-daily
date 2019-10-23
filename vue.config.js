@@ -27,27 +27,27 @@ const plugins = [
         transform(content) {
             return UglifyJS.minify(content.toString()).code
         },
-        ignore: ['*.html', 'app.min.js', 'auth.min.js', 'database.min.js'],
+        ignore: ['*.html', '*.min.js'],
     },
     {
         from: path.resolve('src/background/'),
         to: `${path.resolve('dist')}/background/[name].[ext]`,
-        ignore: ['*.html', 'bg.js'],
-    },
-    {
-        from: path.resolve('src/background/index.html'),
-        to: `${path.resolve('dist')}/background/index.html`,
-        transform(content) {
-            return htmlMinifier(content.toString(), {
-                removeAttributeQuotes: true,
-                collapseWhitespace: true,
-                // minifyCSS: true,
-                // minifyJS: (text, inline) => {
-                //     return UglifyJS.minify(text).code
-                // },
-                removeComments: true,
-            })
+        transform(content, path) {
+            if (/.html$/.test(path)) {
+                return htmlMinifier(content.toString(), {
+                    removeAttributeQuotes: true,
+                    collapseWhitespace: true,
+                    // minifyCSS: true,
+                    // minifyJS: (text, inline) => {
+                    //     return UglifyJS.minify(text).code
+                    // },
+                    removeComments: true,
+                })
+            } else {
+                return content.toString()
+            }
         },
+        ignore: ['bg.js'],
     },
     {
         from: path.resolve('src/content-script/'),
