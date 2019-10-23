@@ -123,7 +123,9 @@ function removeLinesFetchData(url, lineData, sendRes) {
                     const { lines } = doc.val()
                     if (!lines) return
                     const index = lines.findIndex(
-                        line => line.x === lineData.x && line.y === lineData.y,
+                        line =>
+                            Math.ceil(line.x) === Math.ceil(lineData.x) &&
+                            Math.ceil(line.y) === Math.ceil(lineData.y),
                     )
                     if (index === -1) return
 

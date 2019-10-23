@@ -1,6 +1,10 @@
 ;(function draw() {
+    const voiceTubeBody = document.getElementById(`caption_detail`)
     const canvasDom = document.getElementById('my-important-pen-canvas')
     if (canvasDom) {
+        if (canvasDom.parentNode === voiceTubeBody) {
+            return voiceTubeBody.removeChild(canvasDom)
+        }
         return document.body.removeChild(canvasDom)
     }
     chrome.runtime.sendMessage(
@@ -19,25 +23,35 @@
             canvas.id = 'my-important-pen-canvas'
             line.className = 'my-important-pen'
             followCircle.style.cssText = `
-            width: 6px;
-            height: 6px;
-            background: ${color};
-            border-radius: 50%;
-            position: fixed;
-            z-index: 100;
-        `
+                width: 6px;
+                height: 6px;
+                background: ${color};
+                border-radius: 50%;
+                position: absolute;
+                z-index: 100;
+            `
             canvas.style.cssText = `
                             width: 100%;
-                            height: ${document.body.scrollHeight}px;
+                            height: ${
+                                voiceTubeBody
+                                    ? voiceTubeBody.scrollHeight
+                                    : document.body.scrollHeight
+                            }px;
                             position: absolute;
                             left: 0;
                             top: 0;
                             z-index: 100;
                             cursor: none;
+                            background-color: rgba(0, 0, 0, .05);
                         `
             line.className = 'my-important-pen'
             canvas.addEventListener('mousedown', ev => {
-                const { pageX: x, pageY: y } = ev
+                let x = ev.pageX
+                let y = ev.pageY
+                if (voiceTubeBody) {
+                    x = ev.clientX - canvas.getBoundingClientRect().left
+                    y = ev.pageY - canvas.getBoundingClientRect().top
+                }
                 line.style.cssText = `
                                 width: 0;
                                 height: 3px;
@@ -55,12 +69,21 @@
                 isDown = true
             })
             canvas.addEventListener('mousemove', ev => {
-                const { clientX, clientY } = ev
-                followCircle.style.left = clientX - 3 + 'px'
-                followCircle.style.top = clientY + 'px'
+                let x = ev.pageX
+                let y = ev.pageY
+                if (voiceTubeBody) {
+                    x = ev.clientX - canvas.getBoundingClientRect().left
+
+                    y = ev.pageY - canvas.getBoundingClientRect().top
+                }
+                followCircle.style.left = x - 3 + 'px'
+                followCircle.style.top = y + 'px'
                 if (isDown) {
-                    const { pageX: x } = ev
-                    const { x: ox } = downPageXY
+                    let x = ev.pageX
+                    let ox = downPageXY.x
+                    if (voiceTubeBody) {
+                        x = ev.clientX - canvas.getBoundingClientRect().left
+                    }
                     const width = Math.abs(x - ox)
                     line.style.width = width + 'px'
                     sentData.width = width
@@ -71,10 +94,14 @@
                     cloneLine = line
                 }
             })
-            canvas.addEventListener('mouseup', () => {
+            canvas.addEventListener('mouseup', ev => {
                 isDown = false
                 if (sentData.width < 3) sentData.width = 3
-                body.removeChild(canvas)
+                if (voiceTubeBody) {
+                    voiceTubeBody.removeChild(canvas)
+                } else {
+                    body.removeChild(canvas)
+                }
                 chrome.runtime.sendMessage({
                     mode: 'sendLine',
                     data: sentData,
@@ -105,7 +132,11 @@
                             },
                         )
                     })
-                    body.appendChild(cloneLine)
+                    if (voiceTubeBody) {
+                        voiceTubeBody.appendChild(cloneLine)
+                    } else {
+                        body.appendChild(cloneLine)
+                    }
                 }
             })
             function windowKeydownEvent(ev) {
@@ -117,7 +148,15 @@
             }
             window.addEventListener('keydown', windowKeydownEvent)
             canvas.appendChild(followCircle)
-            body.appendChild(canvas)
+            if (
+                new RegExp('https://tw.voicetube.com/videos/').test(
+                    window.location.href,
+                )
+            ) {
+                voiceTubeBody.appendChild(canvas)
+            } else {
+                body.appendChild(canvas)
+            }
         },
     )
 })()

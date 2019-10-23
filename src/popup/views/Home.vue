@@ -232,6 +232,10 @@
                         class="footer__list__btn-main__modal__list"
                         @click="goToChart"
                     ><i class="footer__list__btn-main__modal__list__icon fas fa-chart-bar"></i><span class="footer__list__btn-main__modal__list__name">數據圖表</span></div>
+                    <!-- <div
+                        class="footer__list__btn-main__modal__list"
+                        @click="goToHistory"
+                    ><i class="footer__list__btn-main__modal__list__icon fas fa-list-ol"></i><span class="footer__list__btn-main__modal__list__name">過往紀錄</span></div> -->
                     <div
                         class="footer__list__btn-main__modal__list"
                         @click="goToExplanation"
@@ -549,15 +553,18 @@ export default {
                         .orderByChild('url')
                         .equalTo(url)
                         .once('value', snap => {
-                            const pushFetchData = () =>
+                            const pushFetchData = isOnce => {
+                                const data = {
+                                    ...pushData,
+                                    color: this.createListColor,
+                                }
+                                if (isOnce) data.historyTime = data.createTime
                                 this.userListsDB
-                                    .push({
-                                        ...pushData,
-                                        color: this.createListColor,
-                                    })
+                                    .push(data)
                                     .then(() => this.fetchLists())
+                            }
                             if (!snap.exists()) {
-                                pushFetchData()
+                                pushFetchData(true)
                             } else {
                                 if (
                                     !this.createListIsNewColor ||
@@ -624,7 +631,7 @@ export default {
                 updateData[this.recentSevenDays[this.dayCurrent]] = 1
                 this.userListsAfterDB(uuid)
                     .update(updateData)
-                    .then(() => this.fetchLists())
+                    .then(() => window.close())
             })
         },
         draw() {
@@ -649,6 +656,9 @@ export default {
         },
         goToExplanation() {
             this.$router.push('/explanation')
+        },
+        goToHistory() {
+            this.$router.push('/history')
         },
         pointClickChangeColor(color) {
             this.tabsQuery(tabs => {

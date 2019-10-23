@@ -44,11 +44,16 @@
             <strong class="content__title">重點</strong>
             <p>快捷預設為<span class="content__badge">Alt+Shift+Q</span>，當此網頁<span class="content__badge">有新增記憶項及在當前網頁</span>時，顏色會呈現<span class="content__badge">青色</span>，否則為灰色。</p>
             <p>當為青色時即可在該網頁上畫線，畫線的顏色為<span class="content__badge">顯示按鈕</span>的顏色，當開啟畫線功能時，滑鼠指標會有紅(及對應顏色)點，便可開始畫線，重按此按鈕及 ESC 皆可取消畫線功能。</p>
-            <p><b class="content__tip">順帶一提：</b><span class="content__badge">Alt+Q</span>為擴充頁面開啟快捷。</p>
             <img
                 src="@/assets/explanation-gif-point.gif"
                 alt=""
             >
+            <p><b class="content__tip">VoiceTube：</b>VoiceTube也支援畫線功能，<span class="content__badge">目前只支援畫在字幕裡(下圖)</span>，配合VoiceTube的單字本功能，可以大幅增加學習效率。</p>
+            <img
+                src="@/assets/explanation-5.png"
+                alt=""
+            >
+            <p><b class="content__tip">順帶一提：</b><span class="content__badge">Alt+Q</span>為擴充頁面開啟快捷。</p>
         </article>
         <article
             class="content"

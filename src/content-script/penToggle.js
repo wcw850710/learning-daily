@@ -1,4 +1,25 @@
+var _voiceContentObserver
+if (document.getElementById(`caption_detail`) && !_voiceContentObserver) {
+    _voiceContentObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.target.style.overflow === 'hidden') {
+                mutation.target.style.marginRight = '17px'
+            } else {
+                mutation.target.style.marginRight = '0'
+            }
+        })
+    })
+    _voiceContentObserver.observe(document.getElementById(`caption_detail`), {
+        attributes: true,
+    })
+}
 ;(() => {
+    const voiceTubeBody = document.getElementById(`caption_detail`)
+    if (voiceTubeBody) {
+        if (voiceTubeBody.style.overflow === 'hidden') {
+            voiceTubeBody.style.marginRight = '17px'
+        }
+    }
     const pens = [...document.body.getElementsByClassName('my-important-pen')]
     if (!pens.length) {
         const fragment = document.createDocumentFragment()
@@ -30,14 +51,20 @@
                         { mode: 'removeLine', lineData },
                         res => {
                             if (res) {
-                                document.body.removeChild(line)
+                                voiceTubeBody
+                                    ? voiceTubeBody.removeChild(line)
+                                    : document.body.removeChild(line)
                             }
                         },
                     )
                 })
                 fragment.appendChild(line)
             }
-            document.body.appendChild(fragment)
+            if (voiceTubeBody) {
+                voiceTubeBody.appendChild(fragment)
+            } else {
+                document.body.appendChild(fragment)
+            }
         })
     } else {
         const fragment = document.createDocumentFragment()
