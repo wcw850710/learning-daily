@@ -232,10 +232,10 @@
                         class="footer__list__btn-main__modal__list"
                         @click="goToChart"
                     ><i class="footer__list__btn-main__modal__list__icon fas fa-chart-bar"></i><span class="footer__list__btn-main__modal__list__name">數據圖表</span></div>
-                    <!-- <div
+                    <div
                         class="footer__list__btn-main__modal__list"
                         @click="goToHistory"
-                    ><i class="footer__list__btn-main__modal__list__icon fas fa-list-ol"></i><span class="footer__list__btn-main__modal__list__name">過往紀錄</span></div> -->
+                    ><i class="footer__list__btn-main__modal__list__icon fas fa-list-ol"></i><span class="footer__list__btn-main__modal__list__name">過往紀錄</span></div>
                     <div
                         class="footer__list__btn-main__modal__list"
                         @click="goToExplanation"
@@ -553,42 +553,49 @@ export default {
                         .orderByChild('url')
                         .equalTo(url)
                         .once('value', snap => {
-                            const pushFetchData = isOnce => {
-                                const data = {
-                                    ...pushData,
-                                    color: this.createListColor,
-                                }
-                                if (isOnce) {
-                                    const onceData = {
-                                        name: data.name,
-                                        url: data.url,
-                                        checkLength: 0,
+                            this.userListsDB
+                                .limitToLast(1)
+                                .once('value', addSnap => {
+                                    const data = addSnap.val()
+                                    let index = 0
+                                    if (data) {
+                                        addSnap.forEach(doc => {
+                                            index = doc.val().index + 1
+                                        })
                                     }
-                                    this.userHistoryListsDB.push(onceData)
-                                }
-                                this.userListsDB
-                                    .push(data)
-                                    .then(() => this.fetchLists())
-                            }
-                            if (!snap.exists()) {
-                                pushFetchData(true)
-                            } else {
-                                if (
-                                    !this.createListIsNewColor ||
-                                    Object.keys(snap.val()).length >=
-                                        this.createListColors.length
-                                )
-                                    return this.$my.alert(
-                                        this.$refs.mainRef,
-                                        '此連結已經創建',
-                                    )
-                                pushFetchData()
-                            }
-                            this.createListName = ''
-                            this.createListIsNewColor = false
-                            this.createListColor = this.createListColors[0]
 
-                            this.hideCreateModal()
+                                    const pushFetchData = isOnce => {
+                                        const data = {
+                                            ...pushData,
+                                            index,
+                                            color: this.createListColor,
+                                        }
+                                        if (isOnce)
+                                            data.historyTime = data.createTime
+                                        this.userListsDB
+                                            .push(data)
+                                            .then(() => this.fetchLists())
+                                    }
+                                    if (!snap.exists()) {
+                                        pushFetchData(true)
+                                    } else {
+                                        if (
+                                            !this.createListIsNewColor ||
+                                            Object.keys(snap.val()).length >=
+                                                this.createListColors.length
+                                        )
+                                            return this.$my.alert(
+                                                this.$refs.mainRef,
+                                                '此連結已經創建',
+                                            )
+                                        pushFetchData()
+                                    }
+                                    this.createListName = ''
+                                    this.createListIsNewColor = false
+                                    this.createListColor = this.createListColors[0]
+
+                                    this.hideCreateModal()
+                                })
                         })
                 }
             })
@@ -742,9 +749,6 @@ export default {
                 )
             }
             return days
-        },
-        userHistoryListsDB() {
-            return this.$db.ref('USERS/' + this.uid + '/HISTORY_LISTS')
         },
         userListsDB() {
             return this.$db.ref('USERS/' + this.uid + '/LISTS')

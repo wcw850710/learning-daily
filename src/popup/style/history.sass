@@ -1,0 +1,43 @@
+@import './var'
+
+.control
+    display: flex
+    align-items: center
+    justify-content: space-between
+    padding: 12px 0 0
+    font-size: 12px
+    &__select
+        width: 90px
+        margin-right: 10px
+    &__page
+        display: flex
+        align-items: center
+        justify-content: center
+        font-size: 12px
+
+        &__list
+            margin: 0 3px
+            transition: 0.4s ease
+            &:not(.page__list-dot)
+                cursor: pointer
+            &:hover:not(.page__list-dot)
+                color: $green
+            &-arrow
+                color: $green
+                font-size: 12px
+            &--active
+                width: 20px
+                height: 20px
+                display: flex
+                align-items: center
+                justify-content: center
+                background: $green
+                border: 1px solid $green
+                color: $w
+                font-weight: 900
+                font-size: 12px
+                border-radius: 50%
+                box-shadow: 0 0 12px rgba($green, .8)
+                &:hover
+                    background: $w
+                    color: $green

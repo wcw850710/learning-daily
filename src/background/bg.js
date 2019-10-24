@@ -99,20 +99,6 @@ function pushLinesFetchData(url, lineData, windowWidth) {
                         listsDB(id, `/${doc.key}`).update({
                             width: windowWidth,
                         })
-                        const historyListsDB = (key = '') =>
-                            _DB
-                                .database()
-                                .ref('USERS/' + id + '/HISTORY_LISTS' + key)
-                        historyListsDB()
-                            .orderByChild('url')
-                            .equalTo(url)
-                            .once(snap => {
-                                snap.forEach(doc => {
-                                    historyListsDB(`/${doc.key}`).update({
-                                        width: windowWidth,
-                                    })
-                                })
-                            })
                     }
                     if (lines) {
                         listsDB(id, `/${doc.key}`).update({
