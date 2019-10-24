@@ -558,7 +558,14 @@ export default {
                                     ...pushData,
                                     color: this.createListColor,
                                 }
-                                if (isOnce) data.historyTime = data.createTime
+                                if (isOnce) {
+                                    const onceData = {
+                                        name: data.name,
+                                        url: data.url,
+                                        checkLength: 0,
+                                    }
+                                    this.userHistoryListsDB.push(onceData)
+                                }
                                 this.userListsDB
                                     .push(data)
                                     .then(() => this.fetchLists())
@@ -735,6 +742,9 @@ export default {
                 )
             }
             return days
+        },
+        userHistoryListsDB() {
+            return this.$db.ref('USERS/' + this.uid + '/HISTORY_LISTS')
         },
         userListsDB() {
             return this.$db.ref('USERS/' + this.uid + '/LISTS')
