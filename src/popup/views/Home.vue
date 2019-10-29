@@ -19,6 +19,9 @@
                 >
                 <label class="create-modal__list__name">名字</label>
             </div>
+            <div class="create-modal__tip">可以使用 <b class="create-modal__tip__badge">;;</b> 來自定義單詞數量。<br />
+                <!--注意：如果使用自定義數量，將不再紀錄畫線數，此功能給只記單詞卡人用。-->
+            </div>
             <div
                 class="create-modal__list"
                 v-if="createListIsWeb"
@@ -425,6 +428,15 @@ export default {
                     .once('value', snap => {
                         this.isChangeDate = true
                         let lists = []
+                        function setLen(data) {
+                            if (data.customLen) {
+                                return data.customLen
+                            } else if (data.lines) {
+                                return data.lines.length
+                            } else {
+                                return 0
+                            }
+                        }
                         snap.forEach(doc => {
                             const data = doc.val()
                             lists.push({
@@ -432,7 +444,7 @@ export default {
                                 originName: data.name,
                                 isEdit: false,
                                 uuid: doc.key,
-                                length: data.lines ? data.lines.length : 0,
+                                length: setLen(data),
                             })
                         })
                         const newLists = lists.sort(
@@ -525,8 +537,24 @@ export default {
             this.tabsQuery(tabs => {
                 const { url } = tabs[0]
                 if (url) {
-                    if (!this.createListName)
-                        return this.$my.alert(this.$refs.mainRef, '請輸入名字')
+                    const splitName = this.createListName.split(';;')
+                    let name = '',
+                        customLen = 0
+                    if (splitName.length === 1) {
+                        name = splitName[0]
+                    } else {
+                        name = splitName[1]
+                        if (splitName[0] === '') {
+                            customLen = NaN
+                        } else {
+                            customLen = Number(splitName[0])
+                        }
+                    }
+                    if (name === '' || isNaN(customLen))
+                        return this.$my.alert(
+                            this.$refs.mainRef,
+                            '名字格式錯誤',
+                        )
                     const day = 86400000
                     const pushData = {
                         createTime: this.$bg.formatDate(
@@ -534,8 +562,11 @@ export default {
                             'YY-MM-DD hh:mm:ss',
                         ),
                         // dates: [],
-                        name: this.createListName,
+                        name,
                         url,
+                    }
+                    if (customLen > 0) {
+                        pushData.customLen = customLen
                     }
                     for (
                         let i = 0, length = this.times.length;
@@ -574,7 +605,10 @@ export default {
                                             data.historyTime = data.createTime
                                         this.userListsDB
                                             .push(data)
-                                            .then(() => this.fetchLists())
+                                            .then(() => {
+                                                this.fetchLists()
+                                            })
+                                            .catch(err => console.log(err))
                                     }
                                     if (!snap.exists()) {
                                         pushFetchData(true)

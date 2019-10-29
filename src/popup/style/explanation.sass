@@ -10,24 +10,20 @@ img
 .navs
     display: flex
     align-items: baseline
-    border-bottom: 1px solid $gray
+    border-bottom: 1px solid $green
     padding-top: 12px
     +wrapper
     &__nav
         font-size: 12px
         color: #585858
-        border: 1px solid $gray
-        border-bottom: 0
-        border-right-width: 0
         padding: 6px 12px
-        border-radius: 5px 5px 0 0
         cursor: pointer
         transition: 0.4s ease
-        &:last-child
-            border-right-width: 1px
         &:hover, &--active
-            border-color: $green
             color: $green
+            border: 1px solid $green
+            border-bottom: 0
+            border-radius: 5px 5px 0 0
 
 .footer-img
     position: relative

@@ -112,14 +112,7 @@ export default {
             return (type = 'YY-MM-DD hh:mm:ss') =>
                 this.formatDate(
                     new Date(
-                        `${new Date().getFullYear()}-${new Date().getMonth() +
-                            1}-${new Date(
-                            new Date().getTime() +
-                                86400000 *
-                                    (new Date().getDay() === 0
-                                        ? 0
-                                        : 7 - new Date().getDay()),
-                        ).getDate()} 00:00:00`,
+                        new Date(this.weekFirst()).getTime() + 86400000 * 6,
                     ),
                     type,
                 )
@@ -153,7 +146,8 @@ export default {
                         }-${numCurrent + 1 === 13 ? 1 : numCurrent + 1}-1`,
                     ).getTime() - 86400000,
                 ).getDate()
-                if (val >= lastDate - 1) return lastDate
+                if (val >= lastDate || (val === 30 && val < lastDate))
+                    return lastDate
                 return val
             }
             const days = []
@@ -162,7 +156,6 @@ export default {
             }
 
             if (!this.snapEmpty(snap, 10, days)) return
-
             const linesObj = {}
             let pointNums = 0
             let docNums = 0
@@ -171,18 +164,28 @@ export default {
                     `${new Date().getFullYear()}-${this.selectedDetailVal}-1`,
                 ),
             )
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < days.length; i++) {
                 const date = this.formatDate(
                     new Date(
-                        new Date(firstDay).getTime() +
-                            86400000 * range((i + 1) * 3),
+                        `${new Date().getFullYear()}-${
+                            this.selectedDetailVal
+                        }-${days[i]}`,
                     ),
                 )
                 linesObj[date] = 0
             }
             snap.forEach(doc => {
-                const { createTime, lines } = doc.val()
-                const linesLength = lines ? lines.length : 0
+                const { customLen, createTime, lines } = doc.val()
+                function setLen() {
+                    if (customLen) {
+                        return customLen
+                    } else if (lines) {
+                        return lines.length
+                    } else {
+                        return 0
+                    }
+                }
+                const linesLength = setLen()
                 pointNums += linesLength
                 docNums++
                 const current = Number(createTime.split(' ')[0].substr(-2))
@@ -230,8 +233,17 @@ export default {
                 linesObj[date] = 0
             }
             snap.forEach(doc => {
-                const { createTime, lines } = doc.val()
-                const linesLength = lines ? lines.length : 0
+                const { customLen, createTime, lines } = doc.val()
+                function setLen() {
+                    if (customLen) {
+                        return customLen
+                    } else if (lines) {
+                        return lines.length
+                    } else {
+                        return 0
+                    }
+                }
+                const linesLength = setLen()
                 pointNums += linesLength
                 docNums++
                 for (let key in linesObj) {
@@ -264,8 +276,17 @@ export default {
                 linesObj[date] = 0
             }
             snap.forEach(doc => {
-                const { createTime, lines } = doc.val()
-                const linesLength = lines ? lines.length : 0
+                const { customLen, createTime, lines } = doc.val()
+                function setLen() {
+                    if (customLen) {
+                        return customLen
+                    } else if (lines) {
+                        return lines.length
+                    } else {
+                        return 0
+                    }
+                }
+                const linesLength = setLen()
                 pointNums += linesLength
                 docNums++
                 linesObj[createTime.split(' ')[0]] += linesLength

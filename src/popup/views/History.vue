@@ -39,7 +39,7 @@
                             <b
                                 class="content__body__tr__td__point"
                                 :style="{backgroundColor: list.color}"
-                            >{{list.lines ? list.lines.length : 0}}</b>
+                            >{{list.length}}</b>
                             <span
                                 class="content__body__tr__td__name"
                                 v-if="!list.isEdit"
@@ -199,7 +199,20 @@ export default {
                                 data[key] === 1 && checkedLen++
                             }
                         })
-                        const newData = { ...data, checkedLen }
+                        function setLen(data) {
+                            if (data.customLen) {
+                                return data.customLen
+                            } else if (data.lines) {
+                                return data.lines.length
+                            } else {
+                                return 0
+                            }
+                        }
+                        const newData = {
+                            ...data,
+                            checkedLen,
+                            length: setLen(data),
+                        }
                         lists.push(newData)
                     })
                     this.lists = lists.reverse()
