@@ -1,29 +1,5 @@
-# test-project
+# 每天學一點
 
-## Project setup
-```
-yarn install
-```
+![](./發佈圖片/1.png)
 
-### Compiles and hot-reloads for development
-```
-yarn run serve
-```
-
-### Compiles and minifies for production
-```
-yarn run build
-```
-
-### Run your tests
-```
-yarn run test
-```
-
-### Lints and fixes files
-```
-yarn run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+採用艾賓浩斯記憶曲線設計的線上畫重點擴充，讓你紀錄並提醒你複習文章單詞
